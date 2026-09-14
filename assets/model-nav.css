@@ -1,0 +1,9 @@
+
+.viola-model-nav{font-family:'Manrope',Arial,sans-serif;font-size:13px;line-height:1.5;background:#f0eaf9;border-bottom:1px solid #dfd3f0;color:#30233f;padding:12px max(20px,calc((100% - 924px)/2));display:flex;align-items:center;justify-content:space-between;gap:16px;position:relative;z-index:110;box-sizing:border-box}
+.viola-model-nav a{color:#644089;text-decoration:none;font-weight:700}
+.viola-model-nav a:hover{text-decoration:underline}
+.viola-model-nav a:focus-visible,.viola-model-nav summary:focus-visible{outline:3px solid #9575cd;outline-offset:4px}
+.viola-model-nav details{position:relative}.viola-model-nav summary{cursor:pointer;font-weight:700;list-style:none;padding:4px 0}.viola-model-nav summary::-webkit-details-marker{display:none}
+.viola-model-nav ul{position:absolute;right:0;top:100%;background:#fff;border:1px solid #dfd3f0;box-shadow:0 8px 24px #30233f20;border-radius:12px;list-style:none;padding:8px;margin:8px 0 0;min-width:210px;max-height:65vh;overflow:auto}
+.viola-model-nav li{margin:0;padding:0}.viola-model-nav li a{display:block;padding:9px 12px;border-radius:7px}.viola-model-nav a[aria-current=page]{background:#f0eaf9}
+@media print{.viola-model-nav{display:none!important}}
