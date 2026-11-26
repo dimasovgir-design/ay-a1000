@@ -8,13 +8,13 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: #f3f5f8; color: #1e293b; overflow: hidden;
+      font-family: OpenSans, "Open Sans", -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: #ffffff; color: #1e293b; overflow: hidden;
     }
     .app { display: flex; height: 100vh; width: 100vw; }
     .viewport-wrap {
       position: relative; flex: 1; overflow: hidden;
-      background: radial-gradient(circle at 50% 40%, #ffffff 0%, #e9eef5 100%);
+      background: radial-gradient(circle at 50% 40%, #ffffff 0%, #f1edf8 100%);
     }
     #canvas-container { width: 100%; height: 100%; touch-action: none; }
     .badge {
@@ -35,68 +35,68 @@
       transition: opacity 0.4s;
     }
     .loader .bar { width: 180px; height: 5px; border-radius: 3px; background: #dbe3ee; overflow: hidden; }
-    .loader .bar i { display: block; height: 100%; width: 0; background: #2d6cdf; transition: width 0.2s; }
+    .loader .bar i { display: block; height: 100%; width: 0; background: #8054be; transition: width 0.2s; }
     .loader.hidden { opacity: 0; pointer-events: none; }
 
     .sidebar {
-      width: 300px; background: #f8fafc; border-left: 1px solid #e2e8f0;
+      width: 300px; background: #fbf9fe; border-left: 1px solid #ece6f6;
       padding: 12px 14px; overflow-y: auto; display: flex; flex-direction: column;
       align-items: center; gap: 10px;
     }
     .sidebar-note { font-size: 12px; color: #64748b; text-align: center; }
     .remote {
-      width: 248px; background: linear-gradient(180deg, #ffffff 0%, #edf1f6 100%);
-      border: 2px solid #cbd5e1; border-radius: 26px 26px 32px 32px; padding: 12px 12px 14px;
+      width: 248px; background: linear-gradient(180deg, #ffffff 0%, #f3eff9 100%);
+      border: 2px solid #ddd3ee; border-radius: 26px 26px 32px 32px; padding: 12px 12px 14px;
       box-shadow: 0 12px 26px rgba(15,23,42,0.12), inset 0 2px 4px rgba(255,255,255,0.9), inset 0 -4px 8px rgba(148,163,184,0.25);
       display: flex; flex-direction: column; gap: 8px;
     }
     .remote-top { display: flex; align-items: center; justify-content: space-between; padding: 0 4px; }
     .remote-brand { font-size: 11px; font-weight: 700; letter-spacing: 0.6px; color: #475569; text-transform: uppercase; }
     .remote-led { width: 9px; height: 9px; border-radius: 50%; background: #cbd5e1; box-shadow: inset 0 1px 2px rgba(0,0,0,0.25); transition: all 0.15s; }
-    .remote.is-moving .remote-led { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
+    .remote.is-moving .remote-led { background: #66b934; box-shadow: 0 0 8px #66b934; }
     .remote-lcd {
-      background: #1e293b; color: #e2e8f0; border-radius: 10px; padding: 7px 10px;
+      background: #2b2438; color: #ece6f6; border-radius: 10px; padding: 7px 10px;
       display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px; font-size: 11px;
-      font-variant-numeric: tabular-nums; border: 1px solid #334155; box-shadow: inset 0 2px 5px rgba(0,0,0,0.4);
+      font-variant-numeric: tabular-nums; border: 1px solid #3d3350; box-shadow: inset 0 2px 5px rgba(0,0,0,0.4);
     }
     .lcd-item { display: flex; justify-content: space-between; }
-    .lcd-item b { color: #60a5fa; }
+    .lcd-item b { color: #8fd65e; }
     .rows { display: flex; flex-direction: column; gap: 8px; }
-    .remote-row { background: #e2e8f0; border-radius: 12px; padding: 5px 6px 6px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.08); }
-    .row-title { font-size: 10.5px; font-weight: 600; color: #475569; text-align: center; margin-bottom: 4px; }
+    .remote-row { background: #ece6f6; border-radius: 12px; padding: 5px 6px 6px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.08); }
+    .row-title { font-size: 10.5px; font-weight: 600; color: #5b4b78; text-align: center; margin-bottom: 4px; }
     .btn-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
     .r-btn {
-      height: 38px; border: 1px solid #2563eb; border-radius: 9px;
-      background: linear-gradient(180deg, #4b8bf5 0%, #2d6cdf 100%); color: #fff;
+      height: 38px; border: 1px solid #7048ae; border-radius: 9px;
+      background: linear-gradient(180deg, #9a76d6 0%, #8054be 100%); color: #fff;
       display: flex; align-items: center; justify-content: center; gap: 4px; cursor: pointer;
       user-select: none; -webkit-user-select: none; touch-action: none;
-      box-shadow: 0 2px 4px rgba(29,78,216,0.25), inset 0 1px 0 rgba(255,255,255,0.35);
+      box-shadow: 0 2px 4px rgba(112,72,174,0.25), inset 0 1px 0 rgba(255,255,255,0.35);
       transition: transform 0.06s, filter 0.1s;
     }
     .r-btn:hover { filter: brightness(1.07); }
     .r-btn:active, .r-btn.pressed {
-      transform: translateY(1.5px); background: linear-gradient(180deg, #1d4ed8 0%, #1e40af 100%);
+      transform: translateY(1.5px); background: linear-gradient(180deg, #6d44ab 0%, #5c3896 100%);
       box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
     }
     .r-btn svg { width: 28px; height: 20px; pointer-events: none; }
     .r-btn span { font-size: 11px; font-weight: 700; pointer-events: none; }
     .reset-btn {
-      width: 100%; padding: 8px; border-radius: 9px; border: 1px solid #cbd5e1; background: #fff;
-      color: #334155; font-size: 12px; font-weight: 600; cursor: pointer;
+      width: 100%; padding: 8px; border-radius: 9px; border: 1px solid #ddd3ee; background: #fff;
+      color: #5b4b78; font-size: 12px; font-weight: 600; cursor: pointer;
     }
-    .reset-btn:hover { background: #e2e8f0; }
+    .reset-btn:hover { background: #f1ecfa; }
     .toggles { width: 100%; max-width: 248px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
     .toggles button {
-      padding: 7px 8px; font-size: 11.5px; font-weight: 600; border: 1px solid #cbd5e1;
+      padding: 7px 8px; font-size: 11.5px; font-weight: 600; border: 1px solid #ddd3ee;
       background: #fff; color: #1e293b; border-radius: 8px; cursor: pointer; transition: all 0.15s;
     }
-    .toggles button:hover { background: #e2e8f0; }
-    .toggles button.active { background: #1d4ed8; color: #fff; border-color: #1d4ed8; }
+    .toggles button:hover { background: #f1ecfa; }
+    .toggles button.active { background: #f1ecfa; color: #6b46a8; border-color: #9575cd; }
 
     @media (max-width: 820px) {
       .app { flex-direction: column; }
       .viewport-wrap { height: 52vh; flex: none; }
-      .sidebar { width: 100%; height: 48vh; border-left: none; border-top: 1px solid #e2e8f0; padding: 8px; gap: 6px; }
+      .sidebar { width: 100%; height: 48vh; border-left: none; border-top: 1px solid #ece6f6; padding: 8px; gap: 6px; }
       .sidebar-note { display: none; }
       .remote { width: 100%; max-width: 520px; border-radius: 18px; padding: 8px; gap: 6px; }
       .rows { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
@@ -119,7 +119,7 @@
 <body>
   <div class="app">
     <div class="viewport-wrap">
-      <div class="badge">Ліжко функціональне ЛФ-18 (3D)</div>
+      <div class="badge" id="badge">Ліжко функціональне ЛФ-18 (3D)</div>
       <div id="canvas-container"></div>
       <div class="loader" id="loader"><div>Завантаження 3D-моделі… <span id="load-pct">0%</span></div><div class="bar"><i id="load-bar"></i></div></div>
       <div class="hint">Обертати: ЛКМ / палець • Зум: колесо / щипок • Панорама: ПКМ</div>
@@ -214,6 +214,7 @@
     import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
     import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
+    if (window.self !== window.top) document.getElementById('badge').style.display = 'none';
     // ---------- Сцена ----------
     const container = document.getElementById('canvas-container');
     const scene = new THREE.Scene();
@@ -244,7 +245,7 @@
     controls.maxDistance = 6;
     controls.maxPolarAngle = Math.PI / 2 - 0.02;
 
-    scene.add(new THREE.HemisphereLight(0xffffff, 0xdbe4f0, 0.6));
+    scene.add(new THREE.HemisphereLight(0xffffff, 0xe6e0f0, 0.6));
     const dirLight = new THREE.DirectionalLight(0xffffff, 1.3);
     dirLight.position.set(-2.5, 4.5, 3.0);
     dirLight.castShadow = true;
