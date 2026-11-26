@@ -6,238 +6,107 @@
   <title>3D-модель ліжка ЛФ-18 — Пульт керування</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: #f3f5f8;
-      color: #1e293b;
-      height: 100vh;
-      overflow: hidden;
+      background: #f3f5f8; color: #1e293b; overflow: hidden;
     }
-    .app {
-      display: flex;
-      height: 100vh;
-      width: 100vw;
-    }
+    .app { display: flex; height: 100vh; width: 100vw; }
     .viewport-wrap {
-      position: relative;
-      flex: 1;
+      position: relative; flex: 1; overflow: hidden;
       background: radial-gradient(circle at 50% 40%, #ffffff 0%, #e9eef5 100%);
-      overflow: hidden;
     }
-    #canvas-container {
-      width: 100%;
-      height: 100%;
-    }
+    #canvas-container { width: 100%; height: 100%; touch-action: none; }
     .badge {
-      position: absolute;
-      top: 14px;
-      left: 14px;
-      background: rgba(255, 255, 255, 0.9);
-      backdrop-filter: blur(6px);
-      padding: 8px 12px;
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: 600;
+      position: absolute; top: 12px; left: 12px; pointer-events: none;
+      background: rgba(255,255,255,0.9); backdrop-filter: blur(6px);
+      padding: 7px 11px; border-radius: 8px; font-size: 13px; font-weight: 600;
       box-shadow: 0 2px 10px rgba(0,0,0,0.06);
-      pointer-events: none;
     }
     .hint {
-      position: absolute;
-      bottom: 12px;
-      left: 14px;
-      background: rgba(255, 255, 255, 0.85);
-      padding: 6px 10px;
-      border-radius: 6px;
-      font-size: 12px;
-      color: #475569;
-      pointer-events: none;
+      position: absolute; bottom: 10px; left: 12px; pointer-events: none;
+      background: rgba(255,255,255,0.85); padding: 5px 9px; border-radius: 6px;
+      font-size: 11.5px; color: #475569;
     }
+    .loader {
+      position: absolute; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 10px;
+      font-size: 13px; color: #475569; background: rgba(243,245,248,0.85); z-index: 5;
+      transition: opacity 0.4s;
+    }
+    .loader .bar { width: 180px; height: 5px; border-radius: 3px; background: #dbe3ee; overflow: hidden; }
+    .loader .bar i { display: block; height: 100%; width: 0; background: #2d6cdf; transition: width 0.2s; }
+    .loader.hidden { opacity: 0; pointer-events: none; }
 
-    /* Бокова панель з пультом */
     .sidebar {
-      width: 320px;
-      background: #f8fafc;
-      border-left: 1px solid #e2e8f0;
-      padding: 14px 16px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
+      width: 300px; background: #f8fafc; border-left: 1px solid #e2e8f0;
+      padding: 12px 14px; overflow-y: auto; display: flex; flex-direction: column;
+      align-items: center; gap: 10px;
     }
-    .sidebar-note {
-      font-size: 12px;
-      color: #64748b;
-      text-align: center;
-    }
-
-    /* Корпус медичного пульта */
+    .sidebar-note { font-size: 12px; color: #64748b; text-align: center; }
     .remote {
-      width: 248px;
-      background: linear-gradient(180deg, #ffffff 0%, #edf1f6 100%);
-      border: 2px solid #cbd5e1;
-      border-radius: 28px 28px 34px 34px;
-      padding: 14px 14px 18px;
-      box-shadow:
-        0 12px 26px rgba(15, 23, 42, 0.12),
-        inset 0 2px 4px rgba(255, 255, 255, 0.9),
-        inset 0 -4px 8px rgba(148, 163, 184, 0.25);
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      position: relative;
+      width: 248px; background: linear-gradient(180deg, #ffffff 0%, #edf1f6 100%);
+      border: 2px solid #cbd5e1; border-radius: 26px 26px 32px 32px; padding: 12px 12px 14px;
+      box-shadow: 0 12px 26px rgba(15,23,42,0.12), inset 0 2px 4px rgba(255,255,255,0.9), inset 0 -4px 8px rgba(148,163,184,0.25);
+      display: flex; flex-direction: column; gap: 8px;
     }
-    .remote-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 4px;
-    }
-    .remote-brand {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.6px;
-      color: #475569;
-      text-transform: uppercase;
-    }
-    .remote-led {
-      width: 9px;
-      height: 9px;
-      border-radius: 50%;
-      background: #cbd5e1;
-      box-shadow: inset 0 1px 2px rgba(0,0,0,0.25);
-      transition: all 0.15s;
-    }
-    .remote.is-moving .remote-led {
-      background: #22c55e;
-      box-shadow: 0 0 8px #22c55e;
-    }
-
-    /* Цифровий індикатор на пульті */
+    .remote-top { display: flex; align-items: center; justify-content: space-between; padding: 0 4px; }
+    .remote-brand { font-size: 11px; font-weight: 700; letter-spacing: 0.6px; color: #475569; text-transform: uppercase; }
+    .remote-led { width: 9px; height: 9px; border-radius: 50%; background: #cbd5e1; box-shadow: inset 0 1px 2px rgba(0,0,0,0.25); transition: all 0.15s; }
+    .remote.is-moving .remote-led { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
     .remote-lcd {
-      background: #1e293b;
-      color: #e2e8f0;
-      border-radius: 10px;
-      padding: 7px 10px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 4px 8px;
-      font-size: 11px;
-      font-variant-numeric: tabular-nums;
-      border: 1px solid #334155;
-      box-shadow: inset 0 2px 5px rgba(0,0,0,0.4);
+      background: #1e293b; color: #e2e8f0; border-radius: 10px; padding: 7px 10px;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 4px 8px; font-size: 11px;
+      font-variant-numeric: tabular-nums; border: 1px solid #334155; box-shadow: inset 0 2px 5px rgba(0,0,0,0.4);
     }
-    .lcd-item {
-      display: flex;
-      justify-content: space-between;
-    }
-    .lcd-item b {
-      color: #60a5fa;
-    }
-
-    /* Ряди кнопок на пульті */
-    .remote-row {
-      background: #e2e8f0;
-      border-radius: 12px;
-      padding: 5px 6px 6px;
-      box-shadow: inset 0 1px 2px rgba(0,0,0,0.08);
-    }
-    .row-title {
-      font-size: 10.5px;
-      font-weight: 600;
-      color: #475569;
-      text-align: center;
-      margin-bottom: 4px;
-    }
-    .btn-pair {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px;
-    }
+    .lcd-item { display: flex; justify-content: space-between; }
+    .lcd-item b { color: #60a5fa; }
+    .rows { display: flex; flex-direction: column; gap: 8px; }
+    .remote-row { background: #e2e8f0; border-radius: 12px; padding: 5px 6px 6px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.08); }
+    .row-title { font-size: 10.5px; font-weight: 600; color: #475569; text-align: center; margin-bottom: 4px; }
+    .btn-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
     .r-btn {
-      height: 40px;
-      border: 1px solid #2563eb;
-      border-radius: 9px;
-      background: linear-gradient(180deg, #4b8bf5 0%, #2d6cdf 100%);
-      color: #ffffff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 4px;
-      cursor: pointer;
-      user-select: none;
-      -webkit-user-select: none;
-      touch-action: none;
-      box-shadow: 0 2px 4px rgba(29, 78, 216, 0.25), inset 0 1px 0 rgba(255,255,255,0.35);
+      height: 38px; border: 1px solid #2563eb; border-radius: 9px;
+      background: linear-gradient(180deg, #4b8bf5 0%, #2d6cdf 100%); color: #fff;
+      display: flex; align-items: center; justify-content: center; gap: 4px; cursor: pointer;
+      user-select: none; -webkit-user-select: none; touch-action: none;
+      box-shadow: 0 2px 4px rgba(29,78,216,0.25), inset 0 1px 0 rgba(255,255,255,0.35);
       transition: transform 0.06s, filter 0.1s;
     }
-    .r-btn:hover {
-      filter: brightness(1.07);
-    }
+    .r-btn:hover { filter: brightness(1.07); }
     .r-btn:active, .r-btn.pressed {
-      transform: translateY(1.5px);
-      background: linear-gradient(180deg, #1d4ed8 0%, #1e40af 100%);
+      transform: translateY(1.5px); background: linear-gradient(180deg, #1d4ed8 0%, #1e40af 100%);
       box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
     }
-    .r-btn svg {
-      width: 28px;
-      height: 20px;
-      pointer-events: none;
-    }
-    .r-btn span {
-      font-size: 11px;
-      font-weight: 700;
-      pointer-events: none;
-    }
-
-    /* Кнопка скидання в нейтральне положення */
+    .r-btn svg { width: 28px; height: 20px; pointer-events: none; }
+    .r-btn span { font-size: 11px; font-weight: 700; pointer-events: none; }
     .reset-btn {
-      width: 100%;
-      padding: 8px;
-      border-radius: 9px;
-      border: 1px solid #cbd5e1;
-      background: #ffffff;
-      color: #334155;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.15s;
+      width: 100%; padding: 8px; border-radius: 9px; border: 1px solid #cbd5e1; background: #fff;
+      color: #334155; font-size: 12px; font-weight: 600; cursor: pointer;
     }
     .reset-btn:hover { background: #e2e8f0; }
-
-    /* Додаткові перемикачі під пультом */
-    .toggles {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
+    .toggles { width: 100%; max-width: 248px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
     .toggles button {
-      padding: 8px 10px;
-      font-size: 12px;
-      font-weight: 600;
-      border: 1px solid #cbd5e1;
-      background: #ffffff;
-      color: #1e293b;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.15s;
+      padding: 7px 8px; font-size: 11.5px; font-weight: 600; border: 1px solid #cbd5e1;
+      background: #fff; color: #1e293b; border-radius: 8px; cursor: pointer; transition: all 0.15s;
     }
     .toggles button:hover { background: #e2e8f0; }
-    .toggles button.active {
-      background: #1d4ed8;
-      color: #ffffff;
-      border-color: #1d4ed8;
-    }
+    .toggles button.active { background: #1d4ed8; color: #fff; border-color: #1d4ed8; }
 
     @media (max-width: 820px) {
       .app { flex-direction: column; }
-      .viewport-wrap { height: 50vh; flex: none; }
-      .sidebar { width: 100%; height: 50vh; border-left: none; border-top: 1px solid #e2e8f0; }
-      .remote { width: 100%; max-width: 310px; }
+      .viewport-wrap { height: 52vh; flex: none; }
+      .sidebar { width: 100%; height: 48vh; border-left: none; border-top: 1px solid #e2e8f0; padding: 8px; gap: 6px; }
+      .sidebar-note { display: none; }
+      .remote { width: 100%; max-width: 520px; border-radius: 18px; padding: 8px; gap: 6px; }
+      .rows { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+      .r-btn { height: 34px; }
+      .toggles { max-width: 520px; grid-template-columns: repeat(4, 1fr); }
+      .toggles button { font-size: 10.5px; padding: 6px 4px; }
+      .badge { font-size: 11.5px; padding: 5px 8px; }
+      .hint { display: none; }
     }
   </style>
-
   <script type="importmap">
     {
       "imports": {
@@ -252,139 +121,87 @@
     <div class="viewport-wrap">
       <div class="badge">Ліжко функціональне ЛФ-18 (3D)</div>
       <div id="canvas-container"></div>
+      <div class="loader" id="loader"><div>Завантаження 3D-моделі… <span id="load-pct">0%</span></div><div class="bar"><i id="load-bar"></i></div></div>
       <div class="hint">Обертати: ЛКМ / палець • Зум: колесо / щипок • Панорама: ПКМ</div>
     </div>
 
     <div class="sidebar">
       <div class="sidebar-note">Затисніть і тримайте кнопку на пульті</div>
-
-      <!-- ПУЛЬТ КЕРУВАННЯ -->
       <div class="remote" id="remote">
         <div class="remote-top">
           <span class="remote-brand">ЛФ-18 • Пульт</span>
           <span class="remote-led" title="Індикатор приводу"></span>
         </div>
-
         <div class="remote-lcd">
-          <div class="lcd-item"><span>Висота:</span><b id="lcd-height">460 мм</b></div>
+          <div class="lcd-item"><span>Висота:</span><b id="lcd-height">500 мм</b></div>
           <div class="lcd-item"><span>Спина:</span><b id="lcd-back">0°</b></div>
           <div class="lcd-item"><span>Ноги:</span><b id="lcd-thigh">0°</b></div>
           <div class="lcd-item"><span>Нахил:</span><b id="lcd-trend">0°</b></div>
         </div>
-
-        <!-- 1. Спинна секція -->
-        <div class="remote-row">
-          <div class="row-title">Спинна секція (0–60°)</div>
-          <div class="btn-pair">
-            <button class="r-btn" data-prop="back" data-dir="1" title="Підняти спинку">
-              <svg viewBox="0 0 32 22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M4 17 L13 7 M13 17 L28 17" />
-                <path d="M21 5 L21 12 M18 8 L21 5 L24 8" />
-              </svg>
-              <span>▲</span>
-            </button>
-            <button class="r-btn" data-prop="back" data-dir="-1" title="Опустити спинку">
-              <svg viewBox="0 0 32 22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M4 17 L13 7 M13 17 L28 17" />
-                <path d="M21 12 L21 5 M18 9 L21 12 L24 9" />
-              </svg>
-              <span>▼</span>
-            </button>
+        <div class="rows">
+          <div class="remote-row">
+            <div class="row-title">Спинна секція</div>
+            <div class="btn-pair">
+              <button class="r-btn" data-prop="back" data-dir="1" title="Підняти спинку">
+                <svg viewBox="0 0 32 22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17 L13 7 M13 17 L28 17" /><path d="M21 5 L21 12 M18 8 L21 5 L24 8" /></svg><span>▲</span>
+              </button>
+              <button class="r-btn" data-prop="back" data-dir="-1" title="Опустити спинку">
+                <svg viewBox="0 0 32 22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17 L13 7 M13 17 L28 17" /><path d="M21 12 L21 5 M18 9 L21 12 L24 9" /></svg><span>▼</span>
+              </button>
+            </div>
           </div>
-        </div>
-
-        <!-- 2. Секція ніг -->
-        <div class="remote-row">
-          <div class="row-title">Секція стегон / ніг (0–55°)</div>
-          <div class="btn-pair">
-            <button class="r-btn" data-prop="thigh" data-dir="1" title="Підняти ноги">
-              <svg viewBox="0 0 32 22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M4 17 L14 17 L20 10 L28 16" />
-                <path d="M20 3 L20 8 M17.5 5.5 L20 3 L22.5 5.5" />
-              </svg>
-              <span>▲</span>
-            </button>
-            <button class="r-btn" data-prop="thigh" data-dir="-1" title="Опустити ноги">
-              <svg viewBox="0 0 32 22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M4 17 L14 17 L20 10 L28 16" />
-                <path d="M20 8 L20 3 M17.5 5.5 L20 8 L22.5 5.5" />
-              </svg>
-              <span>▼</span>
-            </button>
+          <div class="remote-row">
+            <div class="row-title">Секція ніг</div>
+            <div class="btn-pair">
+              <button class="r-btn" data-prop="thigh" data-dir="1" title="Підняти ноги">
+                <svg viewBox="0 0 32 22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17 L14 17 L20 10 L28 16" /><path d="M20 3 L20 8 M17.5 5.5 L20 3 L22.5 5.5" /></svg><span>▲</span>
+              </button>
+              <button class="r-btn" data-prop="thigh" data-dir="-1" title="Опустити ноги">
+                <svg viewBox="0 0 32 22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17 L14 17 L20 10 L28 16" /><path d="M20 8 L20 3 M17.5 5.5 L20 8 L22.5 5.5" /></svg><span>▼</span>
+              </button>
+            </div>
           </div>
-        </div>
-
-        <!-- 3. Автоконтур (Спина + Ноги одночасно) -->
-        <div class="remote-row">
-          <div class="row-title">Автоконтур (спина + ноги)</div>
-          <div class="btn-pair">
-            <button class="r-btn" data-prop="contour" data-dir="1" title="Положення крісла (вгору)">
-              <svg viewBox="0 0 32 22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M4 8 L11 17 L16 17 L22 11 L28 16" />
-                <path d="M14 4 L14 11 M11.5 6.5 L14 4 L16.5 6.5" />
-              </svg>
-              <span>▲</span>
-            </button>
-            <button class="r-btn" data-prop="contour" data-dir="-1" title="Вирівняти спину і ноги">
-              <svg viewBox="0 0 32 22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M4 8 L11 17 L16 17 L22 11 L28 16" />
-                <path d="M14 11 L14 4 M11.5 8.5 L14 11 L16.5 8.5" />
-              </svg>
-              <span>▼</span>
-            </button>
+          <div class="remote-row">
+            <div class="row-title">Автоконтур (спина + ноги)</div>
+            <div class="btn-pair">
+              <button class="r-btn" data-prop="contour" data-dir="1" title="Положення крісла">
+                <svg viewBox="0 0 32 22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8 L11 17 L16 17 L22 11 L28 16" /><path d="M14 4 L14 11 M11.5 6.5 L14 4 L16.5 6.5" /></svg><span>▲</span>
+              </button>
+              <button class="r-btn" data-prop="contour" data-dir="-1" title="Вирівняти спину і ноги">
+                <svg viewBox="0 0 32 22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8 L11 17 L16 17 L22 11 L28 16" /><path d="M14 11 L14 4 M11.5 8.5 L14 11 L16.5 8.5" /></svg><span>▼</span>
+              </button>
+            </div>
           </div>
-        </div>
-
-        <!-- 4. Висота ложа -->
-        <div class="remote-row">
-          <div class="row-title">Висота ложа (460–780 мм)</div>
-          <div class="btn-pair">
-            <button class="r-btn" data-prop="height" data-dir="1" title="Підняти ліжко">
-              <svg viewBox="0 0 32 22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M4 17 L28 17 M6 17 L6 12 M26 17 L26 13" />
-                <path d="M16 4 L16 12 M13 7 L16 4 L19 7" />
-              </svg>
-              <span>▲</span>
-            </button>
-            <button class="r-btn" data-prop="height" data-dir="-1" title="Опустити ліжко">
-              <svg viewBox="0 0 32 22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M4 17 L28 17 M6 17 L6 12 M26 17 L26 13" />
-                <path d="M16 12 L16 4 M13 9 L16 12 L19 9" />
-              </svg>
-              <span>▼</span>
-            </button>
+          <div class="remote-row">
+            <div class="row-title">Висота ложа</div>
+            <div class="btn-pair">
+              <button class="r-btn" data-prop="height" data-dir="1" title="Підняти ліжко">
+                <svg viewBox="0 0 32 22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17 L28 17 M6 17 L6 12 M26 17 L26 13" /><path d="M16 4 L16 12 M13 7 L16 4 L19 7" /></svg><span>▲</span>
+              </button>
+              <button class="r-btn" data-prop="height" data-dir="-1" title="Опустити ліжко">
+                <svg viewBox="0 0 32 22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17 L28 17 M6 17 L6 12 M26 17 L26 13" /><path d="M16 12 L16 4 M13 9 L16 12 L19 9" /></svg><span>▼</span>
+              </button>
+            </div>
           </div>
-        </div>
-
-        <!-- 5. Тренделенбург / Антитренделенбург -->
-        <div class="remote-row">
-          <div class="row-title">Тренделенбург / Анти- (±12°)</div>
-          <div class="btn-pair">
-            <button class="r-btn" data-prop="trend" data-dir="1" title="Тренделенбург (голова вниз)">
-              <svg viewBox="0 0 32 22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M5 17 L27 10 M5 17 L4 13 M27 10 L26 6" />
-                <circle cx="8" cy="12.5" r="1.5" fill="currentColor" stroke="none" />
-              </svg>
-              <span>Тр+</span>
-            </button>
-            <button class="r-btn" data-prop="trend" data-dir="-1" title="Антитренделенбург (голова вверх)">
-              <svg viewBox="0 0 32 22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M5 10 L27 17 M5 10 L6 6 M27 17 L28 13" />
-                <circle cx="9" cy="7.5" r="1.5" fill="currentColor" stroke="none" />
-              </svg>
-              <span>Ант-</span>
-            </button>
+          <div class="remote-row">
+            <div class="row-title">Тренделенбург / Анти-</div>
+            <div class="btn-pair">
+              <button class="r-btn" data-prop="trend" data-dir="1" title="Тренделенбург (голова вниз)">
+                <svg viewBox="0 0 32 22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17 L27 10 M5 17 L4 13 M27 10 L26 6" /><circle cx="8" cy="12.5" r="1.5" fill="currentColor" stroke="none" /></svg><span>Тр</span>
+              </button>
+              <button class="r-btn" data-prop="trend" data-dir="-1" title="Антитренделенбург (голова вгору)">
+                <svg viewBox="0 0 32 22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 10 L27 17 M5 10 L6 6 M27 17 L28 13" /><circle cx="9" cy="7.5" r="1.5" fill="currentColor" stroke="none" /></svg><span>Ант</span>
+              </button>
+            </div>
           </div>
+          <button class="reset-btn" id="btn-reset">↺ Скинути в горизонталь</button>
         </div>
-
-        <button class="reset-btn" id="btn-reset">↺ Скинути в горизонталь</button>
       </div>
-
-      <!-- Додаткові опції -->
       <div class="toggles">
-        <button id="btn-rails" class="active">Бокові поручні: Підняті</button>
-        <button id="btn-iv" class="active">Штатив крапельниці: Так</button>
-        <button id="btn-mattress" class="active">Матрац: Показати</button>
+        <button id="btn-rail-l" class="active">Поручень 1: вгору</button>
+        <button id="btn-rail-r" class="active">Поручень 2: вгору</button>
+        <button id="btn-iv" class="active">Штатив: так</button>
+        <button id="btn-mattress" class="active">Матрац: так</button>
       </div>
     </div>
   </div>
@@ -392,594 +209,495 @@
   <script type="module">
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+    import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
     import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
     import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
-    // --- 1. СЦЕНА, КАМЕРА, РЕНДЕР ---
+    // ---------- Сцена ----------
     const container = document.getElementById('canvas-container');
     const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(36, container.clientWidth / container.clientHeight, 0.05, 40);
+    const CAM_OFFSET = new THREE.Vector3(-2.05, 1.05, 2.9);
+    function frameCamera() {
+      const asp = container.clientWidth / Math.max(1, container.clientHeight);
+      const k = asp < 0.8 ? 1.5 : asp < 1.3 ? 1.0 : asp < 1.7 ? 0.95 : 0.9;
+      camera.position.set(0, 0.45, 0).addScaledVector(CAM_OFFSET, k);
+    }
+    frameCamera();
 
-    const camera = new THREE.PerspectiveCamera(38, container.clientWidth / container.clientHeight, 0.1, 30);
-    camera.position.set(2.45, 1.55, 2.75);
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
     renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.05;
+    renderer.toneMappingExposure = 0.95;
     container.appendChild(renderer.domElement);
-
-    const pmrem = new THREE.PMREMGenerator(renderer);
-    scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture;
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.06;
-    controls.target.set(0, 0.55, 0);
-    controls.minDistance = 1.4;
-    controls.maxDistance = 6.0;
+    controls.target.set(0, 0.45, 0);
+    controls.minDistance = 1.2;
+    controls.maxDistance = 6;
     controls.maxPolarAngle = Math.PI / 2 - 0.02;
 
-    scene.add(new THREE.HemisphereLight(0xffffff, 0xdbe4f0, 0.7));
-
-    const dirLight = new THREE.DirectionalLight(0xffffff, 1.35);
-    dirLight.position.set(2.8, 4.5, 3.2);
+    scene.add(new THREE.HemisphereLight(0xffffff, 0xdbe4f0, 0.6));
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1.3);
+    dirLight.position.set(-2.5, 4.5, 3.0);
     dirLight.castShadow = true;
     dirLight.shadow.mapSize.set(2048, 2048);
-    dirLight.shadow.camera.near = 0.5;
-    dirLight.shadow.camera.far = 12;
-    const d = 2.2;
-    dirLight.shadow.camera.left = -d;
-    dirLight.shadow.camera.right = d;
-    dirLight.shadow.camera.top = d;
-    dirLight.shadow.camera.bottom = -d;
-    dirLight.shadow.bias = -0.0004;
+    Object.assign(dirLight.shadow.camera, { near: 0.5, far: 12, left: -2.2, right: 2.2, top: 2.2, bottom: -2.2 });
+    dirLight.shadow.bias = -0.0003;
+    dirLight.shadow.normalBias = 0.01;
     scene.add(dirLight);
-
-    const fillLight = new THREE.DirectionalLight(0xeef4ff, 0.5);
-    fillLight.position.set(-3, 2, -2.5);
-    scene.add(fillLight);
-
-    const floor = new THREE.Mesh(
-      new THREE.PlaneGeometry(12, 12),
-      new THREE.ShadowMaterial({ opacity: 0.16 })
-    );
+    const fill = new THREE.DirectionalLight(0xeef4ff, 0.45);
+    fill.position.set(3, 2, -2.5);
+    scene.add(fill);
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(12, 12), new THREE.ShadowMaterial({ opacity: 0.15 }));
     floor.rotation.x = -Math.PI / 2;
     floor.receiveShadow = true;
     scene.add(floor);
 
-    // --- 2. ПРОЦЕДУРНІ PBR-ТЕКСТУРИ ТА МАТЕРІАЛИ ---
-    function createWoodTexture() {
-      const c = document.createElement('canvas');
-      c.width = 1024; c.height = 512;
+    // ---------- Текстури ----------
+    function woodTexture() {
+      const c = document.createElement('canvas'); c.width = 1024; c.height = 512;
       const ctx = c.getContext('2d');
-      ctx.fillStyle = '#cf975d';
-      ctx.fillRect(0, 0, c.width, c.height);
-
-      const cols = 10, rows = 14;
-      const w = c.width / cols, h = c.height / rows;
-      const palette = ['#d6a168', '#c68a4d', '#dfae77', '#bd8044', '#cfa06b', '#d9a66f'];
-
+      ctx.fillStyle = '#d4a06a'; ctx.fillRect(0, 0, c.width, c.height);
+      const cols = 4, rows = 24, w = c.width / cols, h = c.height / rows;
+      const pal = ['#dcae7a', '#d4a26c', '#e2b887', '#cf9d66', '#d9aa74', '#e0b482'];
+      let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
       for (let r = 0; r < rows; r++) {
-        const offset = (r % 2) * (w * 0.5);
-        for (let col = -1; col <= cols; col++) {
-          const x = col * w + offset;
-          const y = r * h;
-          ctx.fillStyle = palette[(r * 7 + col * 3 + 10) % palette.length];
+        const off = rnd() * w;
+        for (let k = -1; k <= cols; k++) {
+          const x = k * w + off, y = r * h;
+          ctx.fillStyle = pal[Math.floor(rnd() * pal.length)];
           ctx.fillRect(x, y, w - 1, h - 1);
-
-          ctx.strokeStyle = 'rgba(110, 62, 22, 0.14)';
-          ctx.lineWidth = 1;
-          for (let g = 0; g < 4; g++) {
-            const gy = y + (g + 0.5) * (h / 4);
-            ctx.beginPath();
-            ctx.moveTo(x, gy);
-            ctx.bezierCurveTo(x + w * 0.3, gy + (Math.random() - 0.5) * 4, x + w * 0.7, gy + (Math.random() - 0.5) * 4, x + w, gy);
+          ctx.strokeStyle = 'rgba(120,70,30,0.13)'; ctx.lineWidth = 1;
+          for (let g = 0; g < 3; g++) {
+            const gy = y + (g + 0.5) * (h / 3);
+            ctx.beginPath(); ctx.moveTo(x, gy);
+            ctx.bezierCurveTo(x + w * 0.3, gy + (rnd() - 0.5) * 4, x + w * 0.7, gy + (rnd() - 0.5) * 4, x + w, gy);
             ctx.stroke();
           }
-          ctx.strokeStyle = 'rgba(90, 48, 16, 0.22)';
-          ctx.strokeRect(x, y, w, h);
+          ctx.strokeStyle = 'rgba(95,52,18,0.2)'; ctx.strokeRect(x, y, w, h);
         }
       }
-      const tex = new THREE.CanvasTexture(c);
-      tex.colorSpace = THREE.SRGBColorSpace;
-      tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-      return tex;
+      const t = new THREE.CanvasTexture(c);
+      t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping;
+      t.anisotropy = 8;
+      return t;
     }
-
-    function createVinylTexture() {
-      const c = document.createElement('canvas');
-      c.width = 256; c.height = 256;
+    function vinylTexture() {
+      const c = document.createElement('canvas'); c.width = 256; c.height = 256;
       const ctx = c.getContext('2d');
-      ctx.fillStyle = '#1e528e';
-      ctx.fillRect(0, 0, 256, 256);
+      ctx.fillStyle = '#25579a'; ctx.fillRect(0, 0, 256, 256);
       for (let i = 0; i < 6000; i++) {
         ctx.fillStyle = Math.random() > 0.5 ? 'rgba(255,255,255,0.035)' : 'rgba(0,0,0,0.05)';
         ctx.fillRect(Math.random() * 256, Math.random() * 256, 2, 2);
       }
-      const tex = new THREE.CanvasTexture(c);
-      tex.colorSpace = THREE.SRGBColorSpace;
-      tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-      tex.repeat.set(3, 3);
-      return tex;
+      const t = new THREE.CanvasTexture(c);
+      t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(3, 3);
+      return t;
     }
 
-    function createPerforatedTexture() {
-      const c = document.createElement('canvas');
-      c.width = 512; c.height = 512;
-      const ctx = c.getContext('2d');
-      ctx.fillStyle = '#e2e6ec';
-      ctx.fillRect(0, 0, 512, 512);
-      ctx.fillStyle = '#5f6b7a';
-      for (let y = 24; y < 512; y += 64) {
-        for (let x = 24; x < 512; x += 48) {
-          ctx.beginPath();
-          ctx.roundRect(x, y, 22, 42, 6);
-          ctx.fill();
-        }
+    // Матеріали (кольори CAD умовні — замінюємо на реальні)
+    const M = {
+      white: new THREE.MeshStandardMaterial({ color: 0xd9dde3, roughness: 0.5, metalness: 0.2 }),
+      panelDark: new THREE.MeshStandardMaterial({ color: 0x7d8794, roughness: 0.6, metalness: 0.2 }),
+      greyPlastic: new THREE.MeshStandardMaterial({ color: 0xbfc6ce, roughness: 0.55, metalness: 0.05 }),
+      darkPlastic: new THREE.MeshStandardMaterial({ color: 0x3b424c, roughness: 0.7, metalness: 0.05 }),
+      chrome: new THREE.MeshStandardMaterial({ color: 0xdfe4ea, roughness: 0.15, metalness: 0.9 }),
+      champagne: new THREE.MeshStandardMaterial({ color: 0xc9c0ad, roughness: 0.3, metalness: 0.75 }),
+      blue: new THREE.MeshStandardMaterial({ color: 0x4f7fe0, roughness: 0.45, metalness: 0.05 }),
+      red: new THREE.MeshStandardMaterial({ color: 0xd9383a, roughness: 0.4, metalness: 0.05 }),
+      wood: new THREE.MeshStandardMaterial({ map: woodTexture(), roughness: 0.5, metalness: 0.02 }),
+      woodEdge: new THREE.MeshStandardMaterial({ color: 0xc9935c, roughness: 0.55, metalness: 0.02 }),
+      pendant: new THREE.MeshStandardMaterial({ color: 0xeef1f4, roughness: 0.45, metalness: 0.05 }),
+      mattress: new THREE.MeshStandardMaterial({ map: vinylTexture(), roughness: 0.6, metalness: 0.03 }),
+    };
+    const MAT_MAP = {
+      mat_0: 'white', mat_4: 'panelDark', mat_1: 'greyPlastic', mat_2: 'darkPlastic', mat_3: 'darkPlastic',
+      mat_5: 'greyPlastic', mat_6: 'greyPlastic', mat_7: 'greyPlastic', mat_8: 'champagne', mat_9: 'blue',
+      mat_10: 'darkPlastic', mat_11: 'red', mat_12: 'darkPlastic', mat_13: 'darkPlastic', mat_14: 'greyPlastic',
+      mat_15: 'greyPlastic', mat_16: 'greyPlastic', mat_18: 'darkPlastic', mat_19: 'greyPlastic', mat_20: 'greyPlastic',
+      mat_21: 'darkPlastic', mat_22: 'chrome', mat_24: 'wood', mat_25: 'wood', mat_27: 'pendant', mat_28: 'blue',
+    };
+
+    // Бокова (box) UV-проекція для деревини — у CAD немає розгортки
+    function addBoxUV(mesh, scale = 1.0) {
+      const g = mesh.geometry, pos = g.attributes.position, nor = g.attributes.normal;
+      const uv = new Float32Array(pos.count * 2);
+      const p = new THREE.Vector3(), n = new THREE.Vector3();
+      const nm = new THREE.Matrix3().getNormalMatrix(mesh.matrixWorld);
+      for (let i = 0; i < pos.count; i++) {
+        p.fromBufferAttribute(pos, i).applyMatrix4(mesh.matrixWorld);
+        n.fromBufferAttribute(nor, i).applyMatrix3(nm);
+        const ax = Math.abs(n.x), ay = Math.abs(n.y), az = Math.abs(n.z);
+        let u, v;
+        if (az >= ax && az >= ay) { u = p.x; v = p.y; }
+        else if (ax >= ay) { u = p.z; v = p.y; }
+        else { u = p.x; v = p.z; }
+        uv[i * 2] = u * scale; uv[i * 2 + 1] = v * scale * 1.4;
       }
-      const tex = new THREE.CanvasTexture(c);
-      tex.colorSpace = THREE.SRGBColorSpace;
-      tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-      tex.repeat.set(2, 2);
-      return tex;
+      g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
     }
 
-    const matWood = new THREE.MeshStandardMaterial({ map: createWoodTexture(), roughness: 0.42, metalness: 0.04 });
-    const matMattress = new THREE.MeshStandardMaterial({ map: createVinylTexture(), roughness: 0.56, metalness: 0.05 });
-    const matFrameWhite = new THREE.MeshStandardMaterial({ color: 0xe6eaf0, roughness: 0.38, metalness: 0.25 });
-    const matPerfMetal = new THREE.MeshStandardMaterial({ map: createPerforatedTexture(), roughness: 0.45, metalness: 0.3 });
-    const matChrome = new THREE.MeshStandardMaterial({ color: 0xd8dee6, roughness: 0.18, metalness: 0.88 });
-    const matAluminum = new THREE.MeshStandardMaterial({ color: 0xcbd2da, roughness: 0.28, metalness: 0.72 });
-    const matBluePlastic = new THREE.MeshStandardMaterial({ color: 0x3b76d1, roughness: 0.45, metalness: 0.05 });
-    const matRedPlastic = new THREE.MeshStandardMaterial({ color: 0xd9383a, roughness: 0.4, metalness: 0.05 });
-    const matGreyPlastic = new THREE.MeshStandardMaterial({ color: 0xbac2cc, roughness: 0.55, metalness: 0.1 });
-    const matRubber = new THREE.MeshStandardMaterial({ color: 0x3b424c, roughness: 0.82, metalness: 0.05 });
+    // ---------- Константи з CAD (м, система координат моделі) ----------
+    const FLOOR_Y = -0.722;            // низ коліс
+    const DECK_Y = -0.223;             // верх секцій ложа
+    const H_BACK = new THREE.Vector2(0.5772, -0.2355);   // шарнір спина/сидіння
+    const H_THIGH = new THREE.Vector2(0.3072, -0.2356);  // шарнір сидіння/стегна
+    const H_KNEE = new THREE.Vector2(-0.0208, -0.2352);  // шарнір стегна/гомілки
+    const CALF_LEN = 0.725;
+    const THIGH_LEN = H_THIGH.x - H_KNEE.x;
+    const P_LEVER_BACK = new THREE.Vector2(0.637, -0.2815);
+    const P_LEVER_THIGH = new THREE.Vector2(0.056, -0.2820);
+    const ROLLER_BACK = new THREE.Vector2(1.087, -0.267);
+    const ROLLER_THIGH = new THREE.Vector2(-0.208, -0.267);
+    const P_ARM_HEAD = new THREE.Vector2(0.793, -0.4486);
+    const P_ARM_FOOT = new THREE.Vector2(-0.247, -0.4486);
+    const EAR_HEAD = new THREE.Vector2(1.2295, -0.333);
+    const EAR_FOOT = new THREE.Vector2(-0.6835, -0.333);
+    const TILT_C = new THREE.Vector2(0.273, -0.30);
+    const RAIL_PIVOT_Y = -0.299, RAIL_LEN = 0.259;
+    const RAIL_POST_X = [-0.0435, 0.2165, 0.4765, 0.7365];
+    const IV_SOCKET = new THREE.Vector3(1.301, -0.229, -0.407);
 
-    // --- 3. НИЖНЯ БАЗА ---
-    const baseGroup = new THREE.Group();
-    scene.add(baseGroup);
+    const LIMITS = { back: [0, 70], thigh: [0, 35], height: [0, 0.28], trend: [-12, 12] };
 
-    function addBox(parent, w, h, d, x, y, z, mat) {
-      const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
-      m.position.set(x, y, z);
-      m.castShadow = true;
-      m.receiveShadow = true;
-      parent.add(m);
-      return m;
-    }
-
-    addBox(baseGroup, 0.06, 0.055, 0.88, -0.88, 0.145, 0, matFrameWhite);
-    addBox(baseGroup, 0.06, 0.055, 0.88,  0.88, 0.145, 0, matFrameWhite);
-    addBox(baseGroup, 1.76, 0.05, 0.055,  0,    0.145, -0.26, matFrameWhite);
-    addBox(baseGroup, 1.76, 0.05, 0.055,  0,    0.145,  0.26, matFrameWhite);
-
-    const ctrlBox = new THREE.Mesh(new RoundedBoxGeometry(0.24, 0.075, 0.22, 2, 0.008), matGreyPlastic);
-    ctrlBox.position.set(-0.08, 0.165, 0);
-    ctrlBox.castShadow = true;
-    baseGroup.add(ctrlBox);
-    addBox(baseGroup, 0.30, 0.025, 0.28, -0.08, 0.13, 0, matFrameWhite);
-
-    const wheelCoords = [
-      [-0.88, -0.40, true],
-      [-0.88,  0.40, false],
-      [ 0.88, -0.40, false],
-      [ 0.88,  0.40, true],
-    ];
-    wheelCoords.forEach(([wx, wz, hasBrake]) => {
-      const wGroup = new THREE.Group();
-      wGroup.position.set(wx, 0, wz);
-      addBox(wGroup, 0.04, 0.055, 0.04, 0, 0.10, 0, matChrome);
-
-      const tire = new THREE.Mesh(new THREE.CylinderGeometry(0.0625, 0.0625, 0.032, 24), matRubber);
-      tire.rotation.x = Math.PI / 2;
-      tire.position.set(0.015, 0.0625, 0);
-      tire.castShadow = true;
-      wGroup.add(tire);
-
-      const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.036, 0.036, 0.035, 20), matGreyPlastic);
-      hub.rotation.x = Math.PI / 2;
-      hub.position.set(0.015, 0.0625, 0);
-      wGroup.add(hub);
-
-      if (hasBrake) addBox(wGroup, 0.055, 0.012, 0.028, 0.045, 0.11, 0, matGreyPlastic);
-      baseGroup.add(wGroup);
+    // ---------- Завантаження ----------
+    const loaderEl = document.getElementById('loader');
+    const loader = new GLTFLoader();
+    loader.setMeshoptDecoder(MeshoptDecoder);
+    const rig = {};
+    loader.load('lf18.glb', (gltf) => {
+      const model = gltf.scene;
+      model.updateMatrixWorld(true);
+      const N = (name) => model.getObjectByName(name);
+      model.traverse((o) => {
+        if (!o.isMesh) return;
+        const key = MAT_MAP[o.material.name] || 'white';
+        o.material = M[key];
+        if (key === 'wood' || key === 'woodEdge') addBoxUV(o);
+        o.castShadow = true; o.receiveShadow = true;
+      });
+      buildRig(model, N);
+      loaderEl.classList.add('hidden');
+      window.ready = true;
+    }, (e) => {
+      if (e.total) {
+        const p = Math.round((e.loaded / e.total) * 100);
+        document.getElementById('load-pct').textContent = p + '%';
+        document.getElementById('load-bar').style.width = p + '%';
+      }
+    }, (err) => {
+      document.getElementById('load-pct').textContent = 'помилка завантаження';
+      console.error(err);
     });
 
-    // --- 4. ВЕРХНЯ РАМА ---
-    const bedFrameGroup = new THREE.Group();
-    scene.add(bedFrameGroup);
-
-    addBox(bedFrameGroup, 2.08, 0.035, 0.045, 0, -0.035, -0.44, matFrameWhite);
-    addBox(bedFrameGroup, 2.08, 0.035, 0.045, 0, -0.035,  0.44, matFrameWhite);
-    addBox(bedFrameGroup, 0.045, 0.035, 0.90, -1.03, -0.035, 0, matFrameWhite);
-    addBox(bedFrameGroup, 0.045, 0.035, 0.90,  1.03, -0.035, 0, matFrameWhite);
-
-    const sideWoodGeo = new RoundedBoxGeometry(2.12, 0.115, 0.026, 2, 0.005);
-    const sideWoodL = new THREE.Mesh(sideWoodGeo, matWood);
-    sideWoodL.position.set(0, -0.02, -0.478);
-    sideWoodL.castShadow = true; sideWoodL.receiveShadow = true;
-    bedFrameGroup.add(sideWoodL);
-
-    const sideWoodR = sideWoodL.clone();
-    sideWoodR.position.z = 0.478;
-    bedFrameGroup.add(sideWoodR);
-
-    function createHeadboard(xPos) {
-      const hb = new THREE.Group();
-      hb.position.set(xPos, 0, 0);
-      const postGeo = new RoundedBoxGeometry(0.038, 0.45, 0.055, 2, 0.012);
-      const pL = new THREE.Mesh(postGeo, matWood);
-      pL.position.set(0, 0.13, -0.48);
-      pL.castShadow = true;
-      hb.add(pL);
-
-      const pR = pL.clone();
-      pR.position.z = 0.48;
-      hb.add(pR);
-
-      const topBar = new THREE.Mesh(new RoundedBoxGeometry(0.036, 0.055, 0.98, 2, 0.012), matWood);
-      topBar.position.set(0, 0.33, 0);
-      topBar.castShadow = true;
-      hb.add(topBar);
-
-      const panel = new THREE.Mesh(new RoundedBoxGeometry(0.024, 0.25, 0.92, 2, 0.006), matWood);
-      panel.position.set(0, 0.04, 0);
-      panel.castShadow = true; panel.receiveShadow = true;
-      hb.add(panel);
-
-      bedFrameGroup.add(hb);
-    }
-    createHeadboard(-1.095);
-    createHeadboard( 1.095);
-
-    // --- 5. 4-СЕКЦІЙНЕ ЛОЖЕ І МАТРАЦ ---
-    const mattressMeshes = [];
-    function createSectionBlock(len, offsetX, parent) {
-      const pan = new THREE.Mesh(new THREE.BoxGeometry(len - 0.012, 0.02, 0.89), matPerfMetal);
-      pan.position.set(offsetX, -0.01, 0);
-      pan.castShadow = true; pan.receiveShadow = true;
-      parent.add(pan);
-
-      const matt = new THREE.Mesh(new RoundedBoxGeometry(len - 0.014, 0.112, 0.90, 3, 0.022), matMattress);
-      matt.position.set(offsetX, 0.058, 0);
-      matt.castShadow = true; matt.receiveShadow = true;
-      parent.add(matt);
-      mattressMeshes.push(matt);
+    function pivotAt(parent, x, y, child) {
+      const p = new THREE.Object3D();
+      p.position.set(x, y, 0);
+      parent.add(p);
+      if (child) { child.position.x -= x; child.position.y -= y; p.add(child); }
+      return p;
     }
 
-    const backPivot = new THREE.Group();
-    backPivot.position.set(-0.30, 0, 0);
-    bedFrameGroup.add(backPivot);
-    createSectionBlock(0.73, -0.365, backPivot);
-
-    createSectionBlock(0.27, -0.165, bedFrameGroup);
-
-    const thighPivot = new THREE.Group();
-    thighPivot.position.set(-0.03, 0, 0);
-    bedFrameGroup.add(thighPivot);
-    createSectionBlock(0.33, 0.165, thighPivot);
-
-    const calfPivot = new THREE.Group();
-    calfPivot.position.set(0.33, 0, 0);
-    thighPivot.add(calfPivot);
-    createSectionBlock(0.73, 0.365, calfPivot);
-
-    // --- 6. БОКОВІ ПОРУЧНІ ---
-    const sideRails = [];
-    function createSideRail(zPos) {
-      const railGroup = new THREE.Group();
-      railGroup.position.set(-0.18, -0.02, zPos);
-
-      addBox(railGroup, 0.92, 0.03, 0.024, 0, 0, 0, matFrameWhite);
-      addBox(railGroup, 0.025, 0.036, 0.028, -0.46, 0, 0, matBluePlastic);
-      addBox(railGroup, 0.025, 0.036, 0.028,  0.46, 0, 0, matBluePlastic);
-
-      const posts = [];
-      [-0.36, -0.02, 0.32].forEach((px) => {
-        const pPivot = new THREE.Group();
-        pPivot.position.set(px, 0.01, 0);
-        const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.011, 0.011, 0.27, 16), matChrome);
-        tube.position.y = 0.135;
-        tube.castShadow = true;
-        pPivot.add(tube);
-
-        const cap = new THREE.Mesh(new THREE.BoxGeometry(0.028, 0.035, 0.03), matBluePlastic);
-        cap.position.y = 0.265;
-        pPivot.add(cap);
-
-        railGroup.add(pPivot);
-        posts.push(pPivot);
+    // Лінійний актуатор: корпус крутиться навколо нерухомого кріплення, шток висувається
+    function makeActuator(group, fixedParent, movingObj, model) {
+      model.updateMatrixWorld(true);
+      const pts = [];
+      const v = new THREE.Vector3();
+      group.traverse((o) => {
+        if (!o.isMesh) return;
+        const pa = o.geometry.attributes.position;
+        const step = Math.max(1, Math.floor(pa.count / 400));
+        for (let i = 0; i < pa.count; i += step) pts.push(v.fromBufferAttribute(pa, i).applyMatrix4(o.matrixWorld).clone());
       });
-
-      const topBarGroup = new THREE.Group();
-      const topBar = new THREE.Mesh(new RoundedBoxGeometry(0.92, 0.032, 0.034, 2, 0.008), matAluminum);
-      topBar.castShadow = true;
-      topBarGroup.add(topBar);
-
-      const lockHousing = new THREE.Mesh(new RoundedBoxGeometry(0.11, 0.055, 0.036, 2, 0.006), matBluePlastic);
-      lockHousing.position.set(0.36, -0.028, 0);
-      topBarGroup.add(lockHousing);
-
-      addBox(topBarGroup, 0.045, 0.018, 0.04, 0.39, -0.028, 0, matRedPlastic);
-      railGroup.add(topBarGroup);
-
-      bedFrameGroup.add(railGroup);
-      sideRails.push({ posts, topBarGroup, len: 0.275 });
-    }
-    createSideRail(-0.502);
-    createSideRail( 0.502);
-
-    // --- 7. ШТАТИВ І ПУЛЬТ НА ЛІЖКУ ---
-    const ivPoleGroup = new THREE.Group();
-    ivPoleGroup.position.set(-1.02, 0, -0.45);
-    const poleRod = new THREE.Mesh(new THREE.CylinderGeometry(0.009, 0.01, 1.85, 16), matChrome);
-    poleRod.position.y = 0.92;
-    poleRod.castShadow = true;
-    ivPoleGroup.add(poleRod);
-
-    const hookCross1 = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.004, 0.22, 10), matChrome);
-    hookCross1.rotation.z = Math.PI / 2;
-    hookCross1.position.y = 1.82;
-    ivPoleGroup.add(hookCross1);
-    const hookCross2 = hookCross1.clone();
-    hookCross2.rotation.y = Math.PI / 2;
-    ivPoleGroup.add(hookCross2);
-
-    [-0.10, 0.10].forEach((offset) => {
-      const ring1 = new THREE.Mesh(new THREE.TorusGeometry(0.025, 0.0035, 8, 20), matChrome);
-      ring1.rotation.x = Math.PI / 2;
-      ring1.position.set(offset, 1.84, 0);
-      ivPoleGroup.add(ring1);
-      const ring2 = ring1.clone();
-      ring2.position.set(0, 1.84, offset);
-      ivPoleGroup.add(ring2);
-    });
-    bedFrameGroup.add(ivPoleGroup);
-
-    const pendantGroup = new THREE.Group();
-    pendantGroup.position.set(-0.56, 0.11, 0.525);
-    const pendantBody = new THREE.Mesh(new RoundedBoxGeometry(0.055, 0.145, 0.022, 2, 0.006), matGreyPlastic);
-    pendantBody.castShadow = true;
-    pendantGroup.add(pendantBody);
-    for (let r = 0; r < 5; r++) {
-      for (let c = 0; c < 2; c++) {
-        addBox(pendantGroup, 0.015, 0.012, 0.006, -0.012 + c * 0.024, 0.042 - r * 0.02, 0.011, matBluePlastic);
+      const c = new THREE.Vector3(); pts.forEach((p) => c.add(p)); c.divideScalar(pts.length);
+      // головна вісь (power iteration)
+      const cov = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+      pts.forEach((p) => { const d = [p.x - c.x, p.y - c.y, p.z - c.z]; for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) cov[i * 3 + j] += d[i] * d[j]; });
+      let ax = new THREE.Vector3(1, 0.1, 0.1);
+      for (let k = 0; k < 30; k++) {
+        ax = new THREE.Vector3(cov[0] * ax.x + cov[1] * ax.y + cov[2] * ax.z, cov[3] * ax.x + cov[4] * ax.y + cov[5] * ax.z, cov[6] * ax.x + cov[7] * ax.y + cov[8] * ax.z).normalize();
       }
+      let tmin = Infinity, tmax = -Infinity;
+      pts.forEach((p) => { const t = p.clone().sub(c).dot(ax); tmin = Math.min(tmin, t); tmax = Math.max(tmax, t); });
+      const E1 = c.clone().addScaledVector(ax, tmin + 0.015), E2 = c.clone().addScaledVector(ax, tmax - 0.015);
+      const box = new THREE.Box3().setFromObject(movingObj);
+      const moveEnd = box.distanceToPoint(E1) < box.distanceToPoint(E2) ? E1 : E2;
+      const fixEnd = moveEnd === E1 ? E2 : E1;
+      // шток — та частина, центр якої ближче до рухомого кінця
+      const parts = group.children.map((ch) => {
+        const b = new THREE.Box3().setFromObject(ch); const cc = new THREE.Vector3(); b.getCenter(cc);
+        return { ch, d: cc.distanceTo(moveEnd) };
+      }).sort((a, b) => a.d - b.d);
+      const rod = parts[0].ch;
+      const holder = new THREE.Object3D();
+      fixedParent.add(holder);
+      holder.add(group);
+      const dir0 = moveEnd.clone().sub(fixEnd);
+      const len0 = dir0.length(); dir0.normalize();
+      return { holder, rod, fixEnd, moveEnd, dir0, len0 };
     }
-    bedFrameGroup.add(pendantGroup);
-
-    // --- 8. МЕХАНІЗМ ПІДЙОМУ (ВАЖЕЛІ + АКТУАТОРИ) ---
-    const headAnchor = new THREE.Object3D();
-    headAnchor.position.set(-0.54, -0.045, 0);
-    bedFrameGroup.add(headAnchor);
-
-    const footAnchor = new THREE.Object3D();
-    footAnchor.position.set(0.48, -0.045, 0);
-    bedFrameGroup.add(footAnchor);
-
-    function createLiftAssembly(baseX) {
-      const arms = [];
-      [-0.26, 0.26].forEach((zOff) => {
-        const pivot = new THREE.Group();
-        pivot.position.set(baseX, 0.155, zOff);
-        addBox(pivot, 0.07, 0.07, 0.045, 0, 0.01, 0, matGreyPlastic);
-
-        const outerArm = new THREE.Mesh(new THREE.BoxGeometry(0.055, 0.22, 0.036), matGreyPlastic);
-        outerArm.position.y = 0.11;
-        outerArm.castShadow = true;
-
-        const innerArm = new THREE.Mesh(new THREE.BoxGeometry(0.038, 1.0, 0.026), matAluminum);
-        innerArm.castShadow = true;
-
-        const armDir = new THREE.Group();
-        armDir.add(outerArm);
-        armDir.add(innerArm);
-        pivot.add(armDir);
-
-        baseGroup.add(pivot);
-        arms.push({ pivot, armDir, innerArm });
-      });
-
-      const actGroup = new THREE.Group();
-      const actBaseX = baseX < 0 ? -0.22 : 0.14;
-      actGroup.position.set(actBaseX, 0.165, 0);
-
-      const motorBody = new THREE.Mesh(new RoundedBoxGeometry(0.18, 0.06, 0.07, 2, 0.008), matGreyPlastic);
-      motorBody.position.x = baseX < 0 ? -0.09 : 0.09;
-      motorBody.castShadow = true;
-      actGroup.add(motorBody);
-
-      const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.013, 0.013, 1.0, 12), matChrome);
-      rod.rotation.z = Math.PI / 2;
-      actGroup.add(rod);
-
-      baseGroup.add(actGroup);
-      return { arms, actGroup, rod, isHead: baseX < 0 };
+    const _q = new THREE.Quaternion(), _d = new THREE.Vector3(), _f = new THREE.Vector3();
+    function updateActuator(a, newMoveEnd) {
+      _d.copy(newMoveEnd).sub(a.fixEnd);
+      const len = _d.length(); _d.normalize();
+      _q.setFromUnitVectors(a.dir0, _d);
+      a.holder.quaternion.copy(_q);
+      _f.copy(a.fixEnd).applyQuaternion(_q);
+      a.holder.position.copy(a.fixEnd).sub(_f);
+      a.rod.position.copy(a.dir0).multiplyScalar(len - a.len0);
+    }
+    function rotZ(v2, pivot, ang) {
+      const c = Math.cos(ang), s = Math.sin(ang), dx = v2.x - pivot.x, dy = v2.y - pivot.y;
+      return new THREE.Vector2(pivot.x + c * dx - s * dy, pivot.y + s * dx + c * dy);
     }
 
-    const headLift = createLiftAssembly(-0.64);
-    const footLift = createLiftAssembly( 0.58);
+    function buildRig(model, N) {
+      // Корінь з відображенням: підлога на y=0, ліжко по центру
+      const display = new THREE.Group();
+      display.position.set(-0.28, -FLOOR_Y, 0);
+      scene.add(display);
+      model.updateMatrixWorld(true);
 
-    // --- 9. КІНЕМАТИКА ТА ЛОГІКА ПУЛЬТА ---
-    const target = { height: 0.46, back: 0, thigh: 0, trend: 0, railFold: 0 };
+      const frameRig = new THREE.Object3D();
+      model.add(frameRig);
+      ['frame', 'seat'].forEach((n) => frameRig.add(N(n)));
+
+      // Секції
+      const backPivot = pivotAt(frameRig, H_BACK.x, H_BACK.y, N('back'));
+      const thighPivot = pivotAt(frameRig, H_THIGH.x, H_THIGH.y, N('thigh'));
+      const calfPivot = new THREE.Object3D();
+      calfPivot.position.set(H_KNEE.x - H_THIGH.x, H_KNEE.y - H_THIGH.y, 0);
+      thighPivot.add(calfPivot);
+      const calf = N('calf'); calf.position.set(-H_KNEE.x, -H_KNEE.y, 0); calfPivot.add(calf);
+
+      // Матрац (4 частини)
+      const mattressMeshes = [];
+      const mat = (parent, x0, x1, ox, oy) => {
+        const len = x1 - x0;
+        const m = new THREE.Mesh(new RoundedBoxGeometry(len, 0.10, 0.88, 3, 0.022), M.mattress);
+        m.position.set((x0 + x1) / 2 - ox, DECK_Y + 0.05 + 0.002 - oy, 0);
+        m.castShadow = m.receiveShadow = true;
+        parent.add(m); mattressMeshes.push(m);
+      };
+      mat(backPivot, 0.585, 1.27, H_BACK.x, H_BACK.y);
+      mat(frameRig, 0.314, 0.575, 0, 0);
+      mat(thighPivot, -0.012, 0.302, H_THIGH.x, H_THIGH.y);
+      mat(calfPivot, -0.725, -0.028, H_KNEE.x, H_KNEE.y);
+
+      // Важелі секцій
+      const leverBackPivot = pivotAt(frameRig, P_LEVER_BACK.x, P_LEVER_BACK.y, N('leverBack'));
+      const leverThighPivot = pivotAt(frameRig, P_LEVER_THIGH.x, P_LEVER_THIGH.y, N('leverThigh'));
+
+      // Важелі підйому (на опорній рамі)
+      const armHead = pivotAt(model, P_ARM_HEAD.x, P_ARM_HEAD.y, N('liftArmHead'));
+      const armFoot = pivotAt(model, P_ARM_FOOT.x, P_ARM_FOOT.y, N('liftArmFoot'));
+
+      // Актуатори
+      const actBack = makeActuator(N('actBack'), frameRig, N('leverBack'), model);
+      const actThigh = makeActuator(N('actThigh'), frameRig, N('leverThigh'), model);
+      const actHead = makeActuator(N('actLiftHead'), model, N('liftArmHead'), model);
+      const actFoot = makeActuator(N('actLiftFoot'), model, N('liftArmFoot'), model);
+
+      // Поручні: один зібраний (піднятий) комплект + дзеркальна копія на інший бік
+      const railSide = new THREE.Group();
+      railSide.add(N('railFixed'));
+      const posts = [0, 1, 2, 3].map((k) => pivotAt(railSide, RAIL_POST_X[k], RAIL_PIVOT_Y, N('railPost' + k)));
+      const railTop = new THREE.Group();
+      railTop.add(N('railTop'));
+      railSide.add(railTop);
+      const railSide2 = railSide.clone(true);
+      railSide2.scale.z = -1;
+      frameRig.add(railSide, railSide2);
+      const posts2 = railSide2.children.filter((o) => !o.isGroup && o.children.length === 1 && o.children[0].name.startsWith('railPost'));
+      const railTop2 = railSide2.children.find((o) => o.isGroup && o.children[0] && o.children[0].name === 'railTop');
+      railTop.add(N('pendant'));
+
+      // Штатив
+      const iv = new THREE.Group();
+      iv.position.copy(IV_SOCKET);
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.0085, 0.0095, 1.62, 16), M.chrome);
+      pole.position.y = 0.81 - 0.07; pole.castShadow = true; iv.add(pole);
+      const topY = 1.62 - 0.07;
+      for (let k = 0; k < 4; k++) {
+        const a = (k * Math.PI) / 2;
+        const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.0035, 0.0035, 0.11, 8), M.chrome);
+        arm.rotation.z = Math.PI / 2; arm.position.set(0.055, 0, 0);
+        const ring = new THREE.Mesh(new THREE.TorusGeometry(0.022, 0.0035, 8, 20), M.chrome);
+        ring.position.set(0.11, 0.022, 0); ring.rotation.y = Math.PI / 2;
+        const g = new THREE.Group(); g.add(arm, ring); g.rotation.y = a; g.position.y = topY;
+        iv.add(g);
+      }
+      frameRig.add(iv);
+
+      display.add(model);
+      Object.assign(rig, { model, frameRig, backPivot, thighPivot, calfPivot, leverBackPivot, leverThighPivot,
+        armHead, armFoot, actBack, actThigh, actHead, actFoot, posts, posts2, railTop, railTop2, iv, mattressMeshes });
+      model.updateMatrixWorld(true);
+    }
+
+    // Пошук кута важеля, при якому ролик торкається низу секції
+    function solveLever(P, C0, linePt0, lineAng, linePt) {
+      const n = new THREE.Vector2(-Math.sin(lineAng), Math.cos(lineAng));
+      const s0 = C0.y - linePt0.y; // відступ у горизонтальному стані
+      const f = (b) => { const C = rotZ(C0, P, b); return (C.x - linePt.x) * n.x + (C.y - linePt.y) * n.y - s0; };
+      const sign = C0.x > P.x ? 1 : -1;
+      let lo = 0, hi = 1.6 * sign;
+      if (f(0) >= 0) return 0;
+      for (let i = 0; i < 40; i++) { const m = (lo + hi) / 2; if (f(m) < 0) lo = m; else hi = m; }
+      return (lo + hi) / 2;
+    }
+
+    // ---------- Стан ----------
+    const target = { height: 0, back: 0, thigh: 0, trend: 0, railL: 0, railR: 0 };
     const current = { ...target };
-
-    const wp = new THREE.Vector3();
-    function updateLiftAssembly(asm, anchor) {
-      anchor.getWorldPosition(wp);
-      asm.arms.forEach(({ pivot, armDir, innerArm }) => {
-        const dx = wp.x - pivot.position.x;
-        const dy = wp.y - pivot.position.y;
-        const dist = Math.hypot(dx, dy);
-        armDir.rotation.z = Math.atan2(dy, dx) - Math.PI / 2;
-
-        const len = Math.max(0.05, dist - 0.12);
-        innerArm.scale.y = len;
-        innerArm.position.y = 0.12 + len / 2;
-      });
-
-      const p0 = asm.arms[0].pivot.position;
-      const midX = p0.x + (wp.x - p0.x) * 0.42;
-      const midY = p0.y + (wp.y - p0.y) * 0.42;
-
-      const adx = midX - asm.actGroup.position.x;
-      const ady = midY - asm.actGroup.position.y;
-      const aDist = Math.hypot(adx, ady);
-      asm.actGroup.rotation.z = Math.atan2(ady, adx) + (asm.isHead ? Math.PI : 0);
-
-      const rodLen = Math.max(0.05, aDist - 0.12);
-      asm.rod.scale.y = rodLen;
-      asm.rod.position.x = (asm.isHead ? -1 : 1) * (0.12 + rodLen / 2);
-    }
+    const d2r = THREE.MathUtils.degToRad;
 
     function applyKinematics() {
-      bedFrameGroup.position.y = current.height;
-      bedFrameGroup.rotation.z = THREE.MathUtils.degToRad(current.trend);
+      if (!rig.model) return;
+      const { frameRig } = rig;
+      // Рама: підйом + нахил навколо центру
+      const t = d2r(current.trend);
+      const m = new THREE.Matrix4().makeTranslation(TILT_C.x, TILT_C.y + current.height, 0)
+        .multiply(new THREE.Matrix4().makeRotationZ(-t))
+        .multiply(new THREE.Matrix4().makeTranslation(-TILT_C.x, -TILT_C.y, 0));
+      frameRig.matrixAutoUpdate = false;
+      frameRig.matrix.copy(m);
+      const earY = (E) => new THREE.Vector3(E.x, E.y, 0).applyMatrix4(m).y;
+      const armAngle = (P, E, yT) => {
+        const r = Math.hypot(E.x - P.x, E.y - P.y), a0 = Math.atan2(E.y - P.y, E.x - P.x);
+        const s = THREE.MathUtils.clamp((yT - P.y) / r, -1, 1);
+        const a = E.x > P.x ? Math.asin(s) : Math.PI - Math.asin(s);
+        return a - a0;
+      };
+      rig.armHead.rotation.z = armAngle(P_ARM_HEAD, EAR_HEAD, earY(EAR_HEAD));
+      rig.armFoot.rotation.z = armAngle(P_ARM_FOOT, EAR_FOOT, earY(EAR_FOOT));
 
-      backPivot.rotation.z = -THREE.MathUtils.degToRad(current.back);
+      // Спина
+      const a = d2r(current.back);
+      rig.backPivot.rotation.z = a;
+      const bLever = solveLever(P_LEVER_BACK, ROLLER_BACK, H_BACK, a, H_BACK);
+      rig.leverBackPivot.rotation.z = bLever;
 
-      const thighRad = THREE.MathUtils.degToRad(current.thigh);
-      thighPivot.rotation.z = thighRad;
+      // Стегна + гомілка
+      const th = d2r(current.thigh);
+      rig.thighPivot.rotation.z = -th;
+      const kneeRise = THIGH_LEN * Math.sin(th);
+      const g = Math.asin(Math.min(0.95, kneeRise / CALF_LEN));
+      rig.calfPivot.rotation.z = g + th;
+      const knee = new THREE.Vector2(H_THIGH.x - THIGH_LEN * Math.cos(th), H_THIGH.y + kneeRise);
+      const tLever = solveLever(P_LEVER_THIGH, ROLLER_THIGH, H_KNEE, -g, knee);
+      rig.leverThighPivot.rotation.z = tLever;
 
-      const kneeY = 0.33 * Math.sin(thighRad);
-      const calfWorldRad = Math.asin(Math.max(-0.95, Math.min(0.95, -kneeY / 0.73)));
-      calfPivot.rotation.z = calfWorldRad - thighRad;
+      // Актуатори
+      const mv = (act, P, ang) => { const p = rotZ(new THREE.Vector2(act.moveEnd.x, act.moveEnd.y), P, ang); return new THREE.Vector3(p.x, p.y, act.moveEnd.z); };
+      updateActuator(rig.actBack, mv(rig.actBack, P_LEVER_BACK, bLever));
+      updateActuator(rig.actThigh, mv(rig.actThigh, P_LEVER_THIGH, tLever));
+      updateActuator(rig.actHead, mv(rig.actHead, P_ARM_HEAD, rig.armHead.rotation.z));
+      updateActuator(rig.actFoot, mv(rig.actFoot, P_ARM_FOOT, rig.armFoot.rotation.z));
 
-      const foldRad = THREE.MathUtils.degToRad(current.railFold);
-      sideRails.forEach(({ posts, topBarGroup, len }) => {
-        posts.forEach((p) => { p.rotation.z = foldRad; });
-        topBarGroup.position.set(-Math.sin(foldRad) * len, 0.01 + Math.cos(foldRad) * len, 0);
-      });
-
-      bedFrameGroup.updateMatrixWorld(true);
-      updateLiftAssembly(headLift, headAnchor);
-      updateLiftAssembly(footLift, footAnchor);
+      // Поручні (паралелограм)
+      const setRail = (posts, top, deg) => {
+        const f = d2r(deg);
+        posts.forEach((p) => (p.rotation.z = -f));
+        top.position.set(RAIL_LEN * Math.sin(f), -RAIL_LEN * (1 - Math.cos(f)), 0);
+      };
+      setRail(rig.posts, rig.railTop, current.railL);
+      setRail(rig.posts2, rig.railTop2, current.railR);
     }
 
-    // Дисплей на пульті
-    const lcdHeight = document.getElementById('lcd-height');
-    const lcdBack   = document.getElementById('lcd-back');
-    const lcdThigh  = document.getElementById('lcd-thigh');
-    const lcdTrend  = document.getElementById('lcd-trend');
-    const remoteEl  = document.getElementById('remote');
-
+    // ---------- Пульт ----------
+    const lcd = { h: document.getElementById('lcd-height'), b: document.getElementById('lcd-back'), t: document.getElementById('lcd-thigh'), tr: document.getElementById('lcd-trend') };
+    const remoteEl = document.getElementById('remote');
+    const clamp = (v, [a, b]) => Math.max(a, Math.min(b, v));
     function updateLCD() {
-      lcdHeight.textContent = `${Math.round(target.height * 1000)} мм`;
-      lcdBack.textContent   = `${Math.round(target.back)}°`;
-      lcdThigh.textContent  = `${Math.round(target.thigh)}°`;
+      lcd.h.textContent = `${Math.round((DECK_Y - FLOOR_Y + target.height) * 1000)} мм`;
+      lcd.b.textContent = `${Math.round(target.back)}°`;
+      lcd.t.textContent = `${Math.round(target.thigh)}°`;
       const tr = Math.round(target.trend * 10) / 10;
-      lcdTrend.textContent  = `${tr > 0 ? '+' : ''}${tr}°`;
+      lcd.tr.textContent = `${tr > 0 ? '+' : ''}${tr}°`;
     }
-
-    // Утримання кнопок пульта
-    let activeAction = null; // { prop, dir, btn }
-    const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
-
     function stepProp(prop, dir, dt) {
-      if (prop === 'back') {
-        target.back = clamp(target.back + dir * 24 * dt, 0, 60);
-      } else if (prop === 'thigh') {
-        target.thigh = clamp(target.thigh + dir * 24 * dt, 0, 55);
-      } else if (prop === 'contour') {
-        target.back  = clamp(target.back  + dir * 22 * dt, 0, 60);
-        target.thigh = clamp(target.thigh + dir * 18 * dt, 0, 55);
-      } else if (prop === 'height') {
-        target.height = clamp(target.height + dir * 0.11 * dt, 0.46, 0.78);
-      } else if (prop === 'trend') {
-        target.trend = clamp(target.trend + dir * 9 * dt, -12, 12);
-      }
+      if (prop === 'back') target.back = clamp(target.back + dir * 22 * dt, LIMITS.back);
+      else if (prop === 'thigh') target.thigh = clamp(target.thigh + dir * 14 * dt, LIMITS.thigh);
+      else if (prop === 'contour') {
+        target.back = clamp(target.back + dir * 22 * dt, LIMITS.back);
+        target.thigh = clamp(target.thigh + dir * 11 * dt, LIMITS.thigh);
+      } else if (prop === 'height') target.height = clamp(target.height + dir * 0.09 * dt, LIMITS.height);
+      else if (prop === 'trend') target.trend = clamp(target.trend + dir * 8 * dt, LIMITS.trend);
       updateLCD();
     }
-
+    let active = null;
     function stopMotion() {
-      if (activeAction && activeAction.btn) {
-        activeAction.btn.classList.remove('pressed');
-      }
-      activeAction = null;
-      remoteEl.classList.remove('is-moving');
+      if (active) active.btn.classList.remove('pressed');
+      active = null; remoteEl.classList.remove('is-moving');
     }
-
     document.querySelectorAll('.r-btn').forEach((btn) => {
       btn.addEventListener('contextmenu', (e) => e.preventDefault());
       btn.addEventListener('pointerdown', (e) => {
-        e.preventDefault();
-        stopMotion();
-        const prop = btn.dataset.prop;
-        const dir = Number(btn.dataset.dir);
-        activeAction = { prop, dir, btn };
-        btn.classList.add('pressed');
-        remoteEl.classList.add('is-moving');
-        // Легкий миттєвий крок навіть при короткому кліку
-        stepProp(prop, dir, 0.06);
+        e.preventDefault(); stopMotion();
+        active = { prop: btn.dataset.prop, dir: Number(btn.dataset.dir), btn };
+        btn.classList.add('pressed'); remoteEl.classList.add('is-moving');
+        stepProp(active.prop, active.dir, 0.06);
       });
     });
-
     document.addEventListener('pointerup', stopMotion);
     document.addEventListener('pointercancel', stopMotion);
     window.addEventListener('blur', stopMotion);
-
-    // Скидання в горизонтальне положення
     document.getElementById('btn-reset').addEventListener('click', () => {
-      target.height = 0.46;
-      target.back = 0;
-      target.thigh = 0;
-      target.trend = 0;
-      updateLCD();
+      Object.assign(target, { height: 0, back: 0, thigh: 0, trend: 0 }); updateLCD();
     });
-
-    // Перемикачі опцій
-    const btnRails = document.getElementById('btn-rails');
-    let railsUp = true;
-    btnRails.addEventListener('click', () => {
-      railsUp = !railsUp;
-      target.railFold = railsUp ? 0 : 76;
-      btnRails.classList.toggle('active', railsUp);
-      btnRails.textContent = `Бокові поручні: ${railsUp ? 'Підняті' : 'Опущені'}`;
+    const railBtn = (id, key, label) => {
+      const b = document.getElementById(id);
+      b.addEventListener('click', () => {
+        const up = target[key] > 40;
+        target[key] = up ? 0 : 76;
+        const nowUp = target[key] === 0;
+        b.classList.toggle('active', nowUp);
+        b.textContent = `${label}: ${nowUp ? 'вгору' : 'вниз'}`;
+      });
+    };
+    railBtn('btn-rail-l', 'railL', 'Поручень 1');
+    railBtn('btn-rail-r', 'railR', 'Поручень 2');
+    document.getElementById('btn-iv').addEventListener('click', (e) => {
+      if (!rig.iv) return;
+      rig.iv.visible = !rig.iv.visible;
+      e.target.classList.toggle('active', rig.iv.visible);
+      e.target.textContent = `Штатив: ${rig.iv.visible ? 'так' : 'ні'}`;
     });
-
-    const btnIv = document.getElementById('btn-iv');
-    btnIv.addEventListener('click', () => {
-      ivPoleGroup.visible = !ivPoleGroup.visible;
-      btnIv.classList.toggle('active', ivPoleGroup.visible);
-      btnIv.textContent = `Штатив крапельниці: ${ivPoleGroup.visible ? 'Так' : 'Ні'}`;
+    document.getElementById('btn-mattress').addEventListener('click', (e) => {
+      if (!rig.mattressMeshes) return;
+      const show = !rig.mattressMeshes[0].visible;
+      rig.mattressMeshes.forEach((m) => (m.visible = show));
+      e.target.classList.toggle('active', show);
+      e.target.textContent = `Матрац: ${show ? 'так' : 'ні'}`;
     });
+    updateLCD();
 
-    const btnMattress = document.getElementById('btn-mattress');
-    let showMattress = true;
-    btnMattress.addEventListener('click', () => {
-      showMattress = !showMattress;
-      mattressMeshes.forEach((m) => (m.visible = showMattress));
-      btnMattress.classList.toggle('active', showMattress);
-      btnMattress.textContent = `Матрац: ${showMattress ? 'Показати' : 'Приховати'}`;
-    });
+    // для автоматичної перевірки
+    window.__setState = (s) => { Object.assign(target, s); Object.assign(current, s); applyKinematics(); updateLCD(); };
+    window.__shot = (px, py, pz, tx, ty, tz) => { camera.position.set(px, py, pz); controls.target.set(tx, ty, tz); controls.update(); renderer.render(scene, camera); };
 
-    // --- 10. РЕНДЕР-ЦИКЛ ---
-    let lastTime = performance.now();
+    // ---------- Цикл ----------
+    let last = performance.now();
     function animate(now) {
       requestAnimationFrame(animate);
-      const dt = Math.min((now - lastTime) / 1000, 0.05);
-      lastTime = now;
-
-      if (activeAction) {
-        stepProp(activeAction.prop, activeAction.dir, dt);
-      }
-
-      const ease = 0.15;
-      current.height   += (target.height   - current.height)   * ease;
-      current.back     += (target.back     - current.back)     * ease;
-      current.thigh    += (target.thigh    - current.thigh)    * ease;
-      current.trend    += (target.trend    - current.trend)    * ease;
-      current.railFold += (target.railFold - current.railFold) * ease;
-
+      const dt = Math.min((now - last) / 1000, 0.05); last = now;
+      if (active) stepProp(active.prop, active.dir, dt);
+      const k = 0.15;
+      for (const key of Object.keys(target)) current[key] += (target[key] - current[key]) * k;
       applyKinematics();
       controls.update();
       renderer.render(scene, camera);
     }
     requestAnimationFrame(animate);
-
     window.addEventListener('resize', () => {
       camera.aspect = container.clientWidth / container.clientHeight;
       camera.updateProjectionMatrix();
