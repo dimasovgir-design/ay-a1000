@@ -524,15 +524,15 @@
       // Штатив
       const iv = new THREE.Group();
       iv.position.copy(IV_SOCKET);
-      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.0085, 0.0095, 1.62, 16), M.chrome);
-      pole.position.y = 0.81 - 0.07; pole.castShadow = true; iv.add(pole);
-      const topY = 1.62 - 0.07;
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.0075, 0.0085, 1.28, 16), M.chrome);
+      pole.position.y = 0.64 - 0.07; pole.castShadow = true; iv.add(pole);
+      const topY = 1.28 - 0.07;
       for (let k = 0; k < 4; k++) {
         const a = (k * Math.PI) / 2;
-        const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.0035, 0.0035, 0.11, 8), M.chrome);
-        arm.rotation.z = Math.PI / 2; arm.position.set(0.055, 0, 0);
-        const ring = new THREE.Mesh(new THREE.TorusGeometry(0.022, 0.0035, 8, 20), M.chrome);
-        ring.position.set(0.11, 0.022, 0); ring.rotation.y = Math.PI / 2;
+        const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.003, 0.003, 0.08, 8), M.chrome);
+        arm.rotation.z = Math.PI / 2; arm.position.set(0.04, 0, 0);
+        const ring = new THREE.Mesh(new THREE.TorusGeometry(0.017, 0.003, 8, 20), M.chrome);
+        ring.position.set(0.08, 0.017, 0); ring.rotation.y = Math.PI / 2;
         const g = new THREE.Group(); g.add(arm, ring); g.rotation.y = a; g.position.y = topY;
         iv.add(g);
       }
