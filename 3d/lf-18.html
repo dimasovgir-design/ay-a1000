@@ -222,7 +222,7 @@
     const CAM_OFFSET = new THREE.Vector3(-2.05, 1.05, 2.9);
     function frameCamera() {
       const asp = container.clientWidth / Math.max(1, container.clientHeight);
-      const k = asp < 0.8 ? 1.5 : asp < 1.3 ? 1.0 : asp < 1.7 ? 0.95 : 0.9;
+      const k = asp < 0.8 ? 1.6 : asp < 1.0 ? 1.42 : asp < 1.3 ? 1.12 : asp < 1.7 ? 1.02 : 0.95;
       camera.position.set(0, 0.45, 0).addScaledVector(CAM_OFFSET, k);
     }
     frameCamera();
@@ -257,10 +257,164 @@
     const fill = new THREE.DirectionalLight(0xeef4ff, 0.45);
     fill.position.set(3, 2, -2.5);
     scene.add(fill);
-    const floor = new THREE.Mesh(new THREE.PlaneGeometry(12, 12), new THREE.ShadowMaterial({ opacity: 0.15 }));
-    floor.rotation.x = -Math.PI / 2;
-    floor.receiveShadow = true;
-    scene.add(floor);
+    // ---------- Палата ----------
+    const WALL_X = 1.24;    // стіна за узголів'ям
+    const WALL_Z = -2.1;    // стіна з вікном
+    const ROOM_H = 2.7;
+    scene.background = new THREE.Color(0xf3f0f7);
+    scene.fog = new THREE.Fog(0xf3f0f7, 7, 13);
+    Object.assign(dirLight.shadow.camera, { left: -3.6, right: 3.6, top: 3.6, bottom: -3.6, far: 14 });
+    dirLight.shadow.camera.updateProjectionMatrix();
+
+    function canvasTex(w, h, draw, rx = 1, ry = 1) {
+      const c = document.createElement('canvas'); c.width = w; c.height = h;
+      draw(c.getContext('2d'), w, h);
+      const t = new THREE.CanvasTexture(c);
+      t.colorSpace = THREE.SRGBColorSpace; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rx, ry);
+      t.anisotropy = 8;
+      return t;
+    }
+    // Лінолеум
+    const linoTex = canvasTex(512, 512, (ctx, w, h) => {
+      ctx.fillStyle = '#cdc7be'; ctx.fillRect(0, 0, w, h);
+      let s = 3; const r = () => (s = (s * 16807) % 2147483647) / 2147483647;
+      for (let i = 0; i < 9000; i++) {
+        const v = r();
+        ctx.fillStyle = v < 0.33 ? 'rgba(120,110,100,0.10)' : v < 0.66 ? 'rgba(255,255,255,0.22)' : 'rgba(150,130,170,0.08)';
+        ctx.fillRect(r() * w, r() * h, 1 + r() * 3, 1 + r() * 2);
+      }
+      ctx.strokeStyle = 'rgba(110,100,95,0.18)'; ctx.lineWidth = 2;
+      ctx.strokeRect(0, 0, w, h);
+    }, 9, 9);
+    const matFloor = new THREE.MeshStandardMaterial({ map: linoTex, roughness: 0.55, metalness: 0.0 });
+    const matWallUp = new THREE.MeshStandardMaterial({ color: 0xf6f4f1, roughness: 0.9 });
+    const matWallLow = new THREE.MeshStandardMaterial({ color: 0xe9e3f3, roughness: 0.85 });
+    const matSkirt = new THREE.MeshStandardMaterial({ color: 0xa996cc, roughness: 0.6 });
+    const matWhite = new THREE.MeshStandardMaterial({ color: 0xf2f3f5, roughness: 0.4, metalness: 0.1 });
+    const matAlu = new THREE.MeshStandardMaterial({ color: 0xd6d9de, roughness: 0.3, metalness: 0.7 });
+    const matPurple = new THREE.MeshStandardMaterial({ color: 0x8054be, roughness: 0.5 });
+    const matDark = new THREE.MeshStandardMaterial({ color: 0x3b3a42, roughness: 0.6 });
+    const matWoodWard = new THREE.MeshStandardMaterial({ map: woodTexture(), roughness: 0.5 });
+    matWoodWard.map.repeat.set(0.6, 0.6);
+
+    const ward = new THREE.Group();
+    scene.add(ward);
+    const box = (w, h, d, x, y, z, m, parent = ward, cast = false) => {
+      const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m);
+      o.position.set(x, y, z); o.receiveShadow = true; o.castShadow = cast; parent.add(o); return o;
+    };
+
+    // Підлога
+    const floorW = new THREE.Mesh(new THREE.PlaneGeometry(14, 14), matFloor);
+    floorW.rotation.x = -Math.PI / 2; floorW.position.set(-4.5, 0, 4.5); floorW.receiveShadow = true;
+    ward.add(floorW);
+
+    // Стіни: узголів'я (x = WALL_X) та з вікном (z = WALL_Z)
+    const ZW0 = WALL_Z, ZW1 = 5.0, XW0 = -6.0, XW1 = WALL_X;
+    const headLen = ZW1 - ZW0, backLen = XW1 - XW0;
+    const winX0 = -1.35, winX1 = 0.05, winY0 = 0.85, winY1 = 2.25;   // проріз вікна
+    // стіна узголів'я
+    box(0.1, 0.9, headLen, WALL_X + 0.05, 0.45, (ZW0 + ZW1) / 2, matWallLow);
+    box(0.1, ROOM_H - 0.9, headLen, WALL_X + 0.05, 0.9 + (ROOM_H - 0.9) / 2, (ZW0 + ZW1) / 2, matWallUp);
+    // стіна з вікном (збираємо навколо прорізу)
+    const bz = WALL_Z - 0.05;
+    const seg = (x0, x1, y0, y1, m) => box(x1 - x0, y1 - y0, 0.1, (x0 + x1) / 2, (y0 + y1) / 2, bz, m);
+    seg(XW0, XW1, 0, 0.85, matWallLow);
+    seg(XW0, winX0, 0.85, 0.9, matWallLow); seg(winX1, XW1, 0.85, 0.9, matWallLow);
+    seg(XW0, winX0, 0.9, ROOM_H, matWallUp); seg(winX1, XW1, 0.9, ROOM_H, matWallUp);
+    seg(winX0, winX1, winY1, ROOM_H, matWallUp);
+    // плінтус і відбійник
+    box(0.02, 0.08, headLen, WALL_X - 0.01, 0.04, (ZW0 + ZW1) / 2, matSkirt);
+    box(backLen, 0.08, 0.02, (XW0 + XW1) / 2, 0.04, WALL_Z + 0.01, matSkirt);
+    box(0.035, 0.12, headLen, WALL_X - 0.018, 0.92, (ZW0 + ZW1) / 2, matWoodWard);
+    box(winX0 - XW0, 0.12, 0.035, (XW0 + winX0) / 2, 0.92, WALL_Z + 0.018, matWoodWard);
+    box(XW1 - winX1, 0.12, 0.035, (winX1 + XW1) / 2, 0.92, WALL_Z + 0.018, matWoodWard);
+
+    // Вікно
+    const skyTex = canvasTex(512, 512, (ctx, w, h) => {
+      const g = ctx.createLinearGradient(0, 0, 0, h);
+      g.addColorStop(0, '#9cc3ea'); g.addColorStop(0.65, '#d8e8f6'); g.addColorStop(1, '#eef3f6');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = 'rgba(255,255,255,0.75)';
+      [[120, 120, 70], [180, 105, 50], [380, 170, 80], [430, 150, 55], [60, 260, 40]].forEach(([x, y, r]) => {
+        ctx.beginPath(); ctx.ellipse(x, y, r * 1.6, r * 0.5, 0, 0, Math.PI * 2); ctx.fill();
+      });
+      ctx.fillStyle = 'rgba(120,160,120,0.55)';
+      for (let i = 0; i < 14; i++) { ctx.beginPath(); ctx.ellipse(i * 40 + 10, h - 30 - (i % 3) * 18, 46, 60, 0, 0, Math.PI * 2); ctx.fill(); }
+    });
+    const glass = new THREE.Mesh(new THREE.PlaneGeometry(winX1 - winX0, winY1 - winY0),
+      new THREE.MeshBasicMaterial({ map: skyTex, toneMapped: false, fog: false }));
+    glass.position.set((winX0 + winX1) / 2, (winY0 + winY1) / 2, WALL_Z - 0.04);
+    ward.add(glass);
+    const fw = 0.06;
+    box(winX1 - winX0 + fw, fw, 0.08, (winX0 + winX1) / 2, winY0, WALL_Z, matWhite);
+    box(winX1 - winX0 + fw, fw, 0.08, (winX0 + winX1) / 2, winY1, WALL_Z, matWhite);
+    box(fw, winY1 - winY0, 0.08, winX0, (winY0 + winY1) / 2, WALL_Z, matWhite);
+    box(fw, winY1 - winY0, 0.08, winX1, (winY0 + winY1) / 2, WALL_Z, matWhite);
+    box(0.04, winY1 - winY0, 0.07, (winX0 + winX1) / 2, (winY0 + winY1) / 2, WALL_Z, matWhite);
+    box(winX1 - winX0 + 0.16, 0.03, 0.2, (winX0 + winX1) / 2, winY0 - 0.02, WALL_Z + 0.08, matWhite);   // підвіконня
+    // Штора
+    const curtainGeo = new THREE.PlaneGeometry(0.55, 2.2, 40, 1);
+    const cp = curtainGeo.attributes.position;
+    for (let i = 0; i < cp.count; i++) cp.setZ(i, Math.sin(cp.getX(i) * 34) * 0.035);
+    curtainGeo.computeVertexNormals();
+    const curtain = new THREE.Mesh(curtainGeo, new THREE.MeshStandardMaterial({ color: 0xbca9de, roughness: 0.95, side: THREE.DoubleSide }));
+    curtain.position.set(winX0 - 0.3, 1.32, WALL_Z + 0.12); curtain.castShadow = true; curtain.receiveShadow = true;
+    ward.add(curtain);
+    box(2.2, 0.025, 0.025, (winX0 + winX1) / 2 - 0.25, 2.45, WALL_Z + 0.12, matAlu);
+
+    // Настінна консоль (bed-head unit)
+    const con = new THREE.Group(); ward.add(con);
+    con.position.set(WALL_X - 0.04, 1.42, 0);
+    box(0.07, 0.26, 2.1, 0, 0, 0, matWhite, con);
+    box(0.072, 0.025, 2.1, 0, 0.09, 0, matPurple, con);
+    box(0.06, 0.03, 2.0, -0.02, 0.15, 0, new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xfff6e8, emissiveIntensity: 0.8 }), con);
+    const outlet = (z, col) => {
+      const p = box(0.012, 0.07, 0.07, -0.04, -0.04, z, matWhite, con);
+      const d = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.01, 20), col);
+      d.rotation.z = Math.PI / 2; d.position.set(-0.048, -0.04, z); con.add(d);
+      return p;
+    };
+    [-0.85, -0.75, 0.75, 0.85].forEach((z) => outlet(z, new THREE.MeshStandardMaterial({ color: 0xe6e6e6, roughness: 0.5 })));
+    outlet(-0.5, new THREE.MeshStandardMaterial({ color: 0x5b8de0 }));   // O2
+    outlet(-0.38, new THREE.MeshStandardMaterial({ color: 0xf2c84b }));  // вакуум
+    outlet(0.5, new THREE.MeshStandardMaterial({ color: 0x5b8de0 }));
+    outlet(0.38, new THREE.MeshStandardMaterial({ color: 0xf2c84b }));
+    const callBtn = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.012, 20), new THREE.MeshStandardMaterial({ color: 0xd9383a }));
+    callBtn.rotation.z = Math.PI / 2; callBtn.position.set(-0.042, -0.04, 0.2); con.add(callBtn);
+
+    // Тумбочка приліжкова
+    const cab = new THREE.Group(); ward.add(cab);
+    cab.position.set(WALL_X - 0.26, 0, -1.08);
+    box(0.46, 0.06, 0.46, 0, 0.08, 0, matDark, cab, true);
+    box(0.46, 0.68, 0.46, 0, 0.45, 0, matWhite, cab, true);
+    box(0.5, 0.03, 0.5, 0, 0.805, 0, matWoodWard, cab, true);
+    box(0.01, 0.14, 0.42, -0.235, 0.68, 0, matWoodWard, cab);
+    box(0.01, 0.34, 0.42, -0.235, 0.36, 0, matWoodWard, cab);
+    box(0.02, 0.015, 0.14, -0.245, 0.68, 0, matAlu, cab);
+    box(0.02, 0.015, 0.14, -0.245, 0.48, 0, matAlu, cab);
+    // склянка та книга на тумбочці
+    const glassCup = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.03, 0.11, 24),
+      new THREE.MeshStandardMaterial({ color: 0xdfeefa, transparent: true, opacity: 0.55, roughness: 0.05 }));
+    glassCup.position.set(0.05, 0.875, 0.1); cab.add(glassCup);
+    const book = box(0.17, 0.03, 0.24, -0.05, 0.835, -0.08, new THREE.MeshStandardMaterial({ color: 0x8a6fbf, roughness: 0.7 }), cab, true);
+    book.rotation.y = 0.3;
+
+    // Годинник на стіні з вікном
+    const clock = new THREE.Group(); ward.add(clock);
+    clock.position.set(0.72, 2.0, WALL_Z + 0.02);
+    const face = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.03, 40), matWhite);
+    face.rotation.x = Math.PI / 2; clock.add(face);
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(0.15, 0.012, 10, 40), matPurple); clock.add(rim);
+    const hand = (len, ang, w) => { const h = new THREE.Mesh(new THREE.BoxGeometry(w, len, 0.005), matDark); h.position.set(Math.sin(ang) * len / 2, Math.cos(ang) * len / 2, 0.02); h.rotation.z = -ang; clock.add(h); };
+    hand(0.09, 0.9, 0.012); hand(0.12, 3.6, 0.008);
+    for (let i = 0; i < 12; i++) { const a = i * Math.PI / 6; const t = new THREE.Mesh(new THREE.BoxGeometry(0.008, 0.022, 0.005), matDark); t.position.set(Math.sin(a) * 0.125, Math.cos(a) * 0.125, 0.018); t.rotation.z = -a; clock.add(t); }
+
+    // Обмеження камери: не заходити за стіни
+    controls.minAzimuthAngle = THREE.MathUtils.degToRad(-100);
+    controls.maxAzimuthAngle = THREE.MathUtils.degToRad(8);
+    controls.maxDistance = 4.6;
+    controls.maxPolarAngle = THREE.MathUtils.degToRad(84);
 
     // ---------- Текстури ----------
     function woodTexture() {
