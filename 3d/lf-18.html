@@ -500,6 +500,17 @@
       // Важелі підйому (на опорній рамі)
       const armHead = pivotAt(model, P_ARM_HEAD.x, P_ARM_HEAD.y, N('liftArmHead'));
       const armFoot = pivotAt(model, P_ARM_FOOT.x, P_ARM_FOOT.y, N('liftArmFoot'));
+      const addRoller = (arm, P, E, z) => {
+        const g = new THREE.Group();
+        g.position.set(E.x - P.x, E.y - P.y, z);
+        const tire = new THREE.Mesh(new THREE.CylinderGeometry(0.021, 0.021, 0.026, 28), M.darkPlastic);
+        tire.rotation.x = Math.PI / 2; tire.castShadow = true; g.add(tire);
+        const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.011, 0.011, 0.03, 16), M.chrome);
+        hub.rotation.x = Math.PI / 2; g.add(hub);
+        arm.add(g);
+      };
+      addRoller(armHead, P_ARM_HEAD, EAR_HEAD, -0.07);
+      addRoller(armFoot, P_ARM_FOOT, EAR_FOOT, 0.07);
 
       // Актуатори
       const actBack = makeActuator(N('actBack'), frameRig, N('leverBack'), model);
@@ -528,7 +539,7 @@
           m.position.set(x, y, z); m.castShadow = m.receiveShadow = true; frameRig.add(m);
         };
         const L = x1 - x0, cx = (x0 + x1) / 2;
-        add(L, 0.006, z1 - z0 + 0.016, cx, -0.3135, (z0 + z1) / 2);          // верхня полиця
+        add(L, 0.006, z1 - z0 + 0.016, cx, -0.309, (z0 + z1) / 2);          // верхня полиця
         add(L, 0.05, 0.004, cx, -0.3355, z0 - 0.006);                         // боковини швелера
         add(L, 0.05, 0.004, cx, -0.3355, z1 + 0.006);
         add(0.03, 0.06, 0.86, xCross, -0.281, 0);                             // поперечка між боковинами рами
@@ -606,11 +617,21 @@
       // Стегна + гомілка
       const th = d2r(current.thigh);
       rig.thighPivot.rotation.z = -th;
-      const kneeRise = THIGH_LEN * Math.sin(th);
-      const g = Math.asin(Math.min(0.95, kneeRise / CALF_LEN));
-      rig.calfPivot.rotation.z = g + th;
-      const knee = new THREE.Vector2(H_THIGH.x - THIGH_LEN * Math.cos(th), H_THIGH.y + kneeRise);
-      const tLever = solveLever(P_LEVER_THIGH, ROLLER_THIGH, H_KNEE, -g, knee);
+      // Ролик заднього важеля завжди в «кишені» між упорами під гомілкою:
+      // точка кишені лежить і на колі важеля, і на колі навколо коліна
+      const knee = new THREE.Vector2(H_THIGH.x - THIGH_LEN * Math.cos(th), H_THIGH.y + THIGH_LEN * Math.sin(th));
+      const rL = ROLLER_THIGH.distanceTo(P_LEVER_THIGH), rK = ROLLER_THIGH.distanceTo(H_KNEE);
+      const dv = knee.clone().sub(P_LEVER_THIGH), D = dv.length();
+      const aa = (rL * rL - rK * rK + D * D) / (2 * D);
+      const hh = Math.sqrt(Math.max(0, rL * rL - aa * aa));
+      const base = P_LEVER_THIGH.clone().addScaledVector(dv, aa / D);
+      const perp = new THREE.Vector2(-dv.y / D, dv.x / D);
+      const c1 = base.clone().addScaledVector(perp, hh), c2 = base.clone().addScaledVector(perp, -hh);
+      const pocket = c1.x < c2.x ? c1 : c2;   // розв'язок з боку ніг
+      const ang = (v) => Math.atan2(v.y, v.x);
+      const calfWorld = ang(pocket.clone().sub(knee)) - ang(ROLLER_THIGH.clone().sub(H_KNEE));
+      rig.calfPivot.rotation.z = calfWorld + th;
+      const tLever = ang(pocket.clone().sub(P_LEVER_THIGH)) - ang(ROLLER_THIGH.clone().sub(P_LEVER_THIGH));
       rig.leverThighPivot.rotation.z = tLever;
 
       // Актуатори
