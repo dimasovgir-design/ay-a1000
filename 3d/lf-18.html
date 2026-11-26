@@ -496,6 +496,17 @@
       // Важелі секцій
       const leverBackPivot = pivotAt(frameRig, P_LEVER_BACK.x, P_LEVER_BACK.y, N('leverBack'));
       const leverThighPivot = pivotAt(frameRig, P_LEVER_THIGH.x, P_LEVER_THIGH.y, N('leverThigh'));
+      // Поперечні вали важелів (у CAD їх немає — лише втулки на рамі)
+      const addShaft = (pivot) => {
+        const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.0125, 0.0125, 0.905, 24), M.white);
+        tube.rotation.x = Math.PI / 2; tube.castShadow = tube.receiveShadow = true; pivot.add(tube);
+        [-0.4525, 0.4525].forEach((z) => {
+          const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.019, 0.019, 0.02, 24), M.greyPlastic);
+          cap.rotation.x = Math.PI / 2; cap.position.z = z; pivot.add(cap);
+        });
+      };
+      addShaft(leverBackPivot);
+      addShaft(leverThighPivot);
 
       // Важелі підйому (на опорній рамі)
       const armHead = pivotAt(model, P_ARM_HEAD.x, P_ARM_HEAD.y, N('liftArmHead'));
