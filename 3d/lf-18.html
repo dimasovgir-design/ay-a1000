@@ -521,6 +521,22 @@
       const railTop2 = railSide2.children.find((o) => o.isGroup && o.children[0] && o.children[0].name === 'railTop');
       railTop.add(N('pendant'));
 
+      // Напрямні під рамою, по яких ковзають кінці важелів підйому
+      const guide = (x0, x1, z0, z1, xCross) => {
+        const add = (w, h, d, x, y, z) => {
+          const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), M.white);
+          m.position.set(x, y, z); m.castShadow = m.receiveShadow = true; frameRig.add(m);
+        };
+        const L = x1 - x0, cx = (x0 + x1) / 2;
+        add(L, 0.006, z1 - z0 + 0.016, cx, -0.3135, (z0 + z1) / 2);          // верхня полиця
+        add(L, 0.05, 0.004, cx, -0.3355, z0 - 0.006);                         // боковини швелера
+        add(L, 0.05, 0.004, cx, -0.3355, z1 + 0.006);
+        add(0.03, 0.06, 0.86, xCross, -0.281, 0);                             // поперечка між боковинами рами
+        add(0.006, 0.05, z1 - z0 + 0.016, x0 + (x0 < xCross ? 0 : 0) + 0.003 * Math.sign(x1 - x0) * 0, -0.3355, (z0 + z1) / 2); // заглушка торця
+      };
+      guide(0.93, 1.277, -0.110, -0.030, 0.945);
+      guide(-0.723, -0.44, 0.030, 0.110, -0.455);
+
       // Штатив
       const iv = new THREE.Group();
       iv.position.copy(IV_SOCKET);
