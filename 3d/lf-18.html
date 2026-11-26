@@ -556,8 +556,8 @@
         add(0.03, 0.06, 0.86, xCross, -0.281, 0);                             // поперечка між боковинами рами
         add(0.006, 0.05, z1 - z0 + 0.016, x0 + (x0 < xCross ? 0 : 0) + 0.003 * Math.sign(x1 - x0) * 0, -0.3355, (z0 + z1) / 2); // заглушка торця
       };
-      guide(0.93, 1.277, -0.110, -0.030, 0.945);
-      guide(-0.723, -0.44, 0.030, 0.110, -0.455);
+      guide(0.80, 1.28, -0.110, -0.030, 0.815);
+      guide(-0.735, -0.26, 0.030, 0.110, -0.275);
 
       // Штатив
       const iv = new THREE.Group();
@@ -609,15 +609,19 @@
         .multiply(new THREE.Matrix4().makeTranslation(-TILT_C.x, -TILT_C.y, 0));
       frameRig.matrixAutoUpdate = false;
       frameRig.matrix.copy(m);
-      const earY = (E) => new THREE.Vector3(E.x, E.y, 0).applyMatrix4(m).y;
-      const armAngle = (P, E, yT) => {
+      // Ролик важеля котиться вздовж напрямної, яка нахиляється разом з рамою
+      const phi = -t;   // кут напрямної (рама повернута на -t)
+      const dX = Math.cos(phi), dY = Math.sin(phi);
+      const armAngle = (P, E) => {
+        const Ew = new THREE.Vector3(E.x, E.y, 0).applyMatrix4(m);
         const r = Math.hypot(E.x - P.x, E.y - P.y), a0 = Math.atan2(E.y - P.y, E.x - P.x);
-        const s = THREE.MathUtils.clamp((yT - P.y) / r, -1, 1);
-        const a = E.x > P.x ? Math.asin(s) : Math.PI - Math.asin(s);
+        const c = (P.x - Ew.x) * dY - (P.y - Ew.y) * dX;
+        const k = Math.asin(THREE.MathUtils.clamp(c / r, -1, 1));
+        const a = E.x > P.x ? phi + k : phi + Math.PI - k;
         return a - a0;
       };
-      rig.armHead.rotation.z = armAngle(P_ARM_HEAD, EAR_HEAD, earY(EAR_HEAD));
-      rig.armFoot.rotation.z = armAngle(P_ARM_FOOT, EAR_FOOT, earY(EAR_FOOT));
+      rig.armHead.rotation.z = armAngle(P_ARM_HEAD, EAR_HEAD);
+      rig.armFoot.rotation.z = armAngle(P_ARM_FOOT, EAR_FOOT);
 
       // Спина
       const a = d2r(current.back);
@@ -673,6 +677,9 @@
       const tr = Math.round(target.trend * 10) / 10;
       lcd.tr.textContent = `${tr > 0 ? '+' : ''}${tr}°`;
     }
+    // Максимальна висота при нахилі (−12…+12°, крок 1°): нахил робиться опусканням одного кінця
+    const HMAX_T = [0.220,0.230,0.238,0.248,0.258,0.266,0.28,0.28,0.28,0.28,0.28,0.28,0.28,0.28,0.28,0.28,0.28,0.28,0.274,0.266,0.256,0.248,0.238,0.228,0.220];
+    const hMax = (tr) => { const f = Math.max(0, Math.min(24, tr + 12)), i = Math.min(23, Math.floor(f)), k = f - i; return HMAX_T[i] * (1 - k) + HMAX_T[i + 1] * k; };
     function stepProp(prop, dir, dt) {
       if (prop === 'back') target.back = clamp(target.back + dir * 22 * dt, LIMITS.back);
       else if (prop === 'thigh') target.thigh = clamp(target.thigh + dir * 14 * dt, LIMITS.thigh);
@@ -681,6 +688,7 @@
         target.thigh = clamp(target.thigh + dir * 11 * dt, LIMITS.thigh);
       } else if (prop === 'height') target.height = clamp(target.height + dir * 0.09 * dt, LIMITS.height);
       else if (prop === 'trend') target.trend = clamp(target.trend + dir * 8 * dt, LIMITS.trend);
+      target.height = Math.min(target.height, hMax(target.trend));
       updateLCD();
     }
     let active = null;
@@ -732,6 +740,7 @@
 
     // для автоматичної перевірки
     window.__setState = (s) => { Object.assign(target, s); Object.assign(current, s); applyKinematics(); updateLCD(); };
+    window.__rig = rig;
     window.__shot = (px, py, pz, tx, ty, tz) => { camera.position.set(px, py, pz); controls.target.set(tx, ty, tz); controls.update(); renderer.render(scene, camera); };
 
     // ---------- Цикл ----------
